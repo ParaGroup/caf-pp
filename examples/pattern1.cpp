@@ -7,42 +7,29 @@
 #include "caf_pp/policy.hpp"
 #include "caf_pp/spawn.hpp"
 
-using namespace caf;
 using namespace std;
+using namespace caf;
 using namespace caf_pp;
 
-struct config : actor_system_config {
-  config() {
-    opt_group{custom_options_, "global"}
-        .add(silent, "silent", "")
-        .add(stream, "stream", "")
-        .add(worker, "worker", "");
-  }
+// class my_general_worker : public event_based_actor {
+// public:
+//   my_general_worker(actor_config &cfg, caf::optional<actor> next, int _,
+//                     string __)
+//       : event_based_actor(cfg), next_(next) {
+//     // nop
+//   }
 
-  bool silent = false;
-  uint64_t stream = 9;
-  uint64_t worker = 2;
-};
+//   behavior make_behavior() override {
+//     return {[=](string value) {
+//       aout(this) << "\tworker_" << id() << "   value=" << value << endl;
+//       if (next_)
+//         send(next_.value(), value + "[" + to_string(id()) + "]");
+//     }};
+//   }
 
-class my_general_worker : public event_based_actor {
-public:
-  my_general_worker(actor_config &cfg, caf::optional<actor> next, int _,
-                    string __)
-      : event_based_actor(cfg), next_(next) {
-    // nop
-  }
-
-  behavior make_behavior() override {
-    return {[=](string value) {
-      aout(this) << "\tworker_" << id() << "   value=" << value << endl;
-      if (next_)
-        send(next_.value(), value + "[" + to_string(id()) + "]");
-    }};
-  }
-
-private:
-  caf::optional<actor> next_;
-};
+// private:
+//   caf::optional<actor> next_;
+// };
 
 class security : public event_based_actor {
 public:
@@ -124,6 +111,10 @@ public:
                  << "   sigma=" + sigma << "   value=" << value << endl;
     }};
   }
+};
+
+struct config : actor_system_config {
+  config() { opt_group{custom_options_, "global"}; }
 };
 
 void caf_main(actor_system &sys, const config &cfg) {
