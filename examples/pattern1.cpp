@@ -1,144 +1,15 @@
 #include <iostream>
-#include <typeinfo>
 #include <vector>
 
 #include "caf/all.hpp"
 
+#include "caf_pp/patterns.hpp"
+#include "caf_pp/policy.hpp"
+#include "caf_pp/spawn.hpp"
+
 using namespace caf;
 using namespace std;
-
-using SpawnFunc = function<actor(caf::optional<actor>)>;
-
-struct Pattern {};
-
-struct Node : public Pattern {
-  Node(SpawnFunc spawn_fun) : spawn_fun_(spawn_fun) {}
-
-  SpawnFunc spawn_fun_;
-  caf::optional<actor> instance_;
-};
-
-template <typename T> struct Farm : public Pattern {
-  Farm(T &stage, uint64_t replicas, actor_pool::policy policy)
-      : stage_(stage), replicas_(replicas), policy_(policy) {
-    static_assert(is_base_of<Pattern, T>::value,
-                  "Type parameter of this class must derive from Pattern");
-  }
-
-  T &stage_;
-  uint64_t replicas_;
-  actor_pool::policy policy_;
-  caf::optional<actor> instance_;
-};
-
-template <class... T> struct Pipeline : public Pattern {
-  Pipeline(T &... stages) : stages_(stages...) {
-    // std::cout << std::is_same<T, Pattern>::value <<  "\n";
-    static_assert(conjunction_v<is_base_of<Pattern, T>...>,
-                  "Type parameter of this class must derive from Pattern");
-  }
-
-  tuple<T &...> stages_;
-  caf::optional<actor> instance_;
-};
-
-template <class T>
-caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
-                                   const caf::optional<actor> &out) {
-  static_assert((is_base_of<Pattern, T>::value != 0),
-                "Type parameter of this function must derive from Pattern");
-  return {};
-}
-
-template <>
-caf::optional<actor> spawn_pattern(actor_system &sys, Node &p,
-                                   const caf::optional<actor> &out) {
-  // is node
-  cout << "[DEBUG] "
-       << "inside NODE spawn" << endl;
-  actor a = p.spawn_fun_(out);
-  p.instance_ = caf::optional<actor>(a);
-  return a;
-}
-
-template <template <class> class Farm, typename T>
-caf::optional<actor> spawn_pattern(actor_system &sys, Farm<T> &p,
-                                   const caf::optional<actor> &out) {
-  // is Farm
-  cout << "[DEBUG] "
-       << "inside FARM spawn" << endl;
-  auto spawn_fun = [&]() {
-    cout << "[DEBUG] "
-         << "inside actor_pool spawn_fun" << endl;
-    return spawn_pattern(sys, p.stage_, out).value();
-  };
-  cout << "[DEBUG] "
-       << "make actor_pool" << endl;
-  auto a = caf::actor_pool::make(sys.dummy_execution_unit(), p.replicas_,
-                                 spawn_fun, p.policy_);
-  p.instance_ = caf::optional<actor>(a);
-  return a;
-}
-
-template <template <class> class Pipeline, typename... T>
-caf::optional<actor> spawn_pattern(actor_system &sys, Pipeline<T...> &p,
-                                   const caf::optional<actor> &out) {
-  // is Pipeline
-  cout << "[DEBUG] "
-       << "inside PIPELINE spawn" << endl;
-  auto a = for_each_tuple(sys, p.stages_, out).value();
-  p.instance_ = caf::optional<actor>(a);
-  return a;
-}
-
-template <size_t I = 0, typename... Tp>
-inline typename std::enable_if<I == sizeof...(Tp), caf::optional<actor>>::type
-for_each_tuple(actor_system &sys, std::tuple<Tp...> &t,
-               const caf::optional<actor> &out) {
-  return out;
-}
-
-template <size_t I = 0, typename... Tp>
-    inline typename std::enable_if <
-    I<sizeof...(Tp), caf::optional<actor>>::type
-    for_each_tuple(actor_system &sys, std::tuple<Tp...> &t,
-                   const caf::optional<actor> &out) {
-  auto last = spawn_pattern(sys, std::get<(sizeof...(Tp)) - 1 - I>(t), out);
-  return for_each_tuple<I + 1, Tp...>(sys, t, caf::optional<actor>(last));
-}
-
-// TODO: deduct KEY parameter from GetKey function
-template <class Key, class GetKey, class Router> struct by_key_policy {
-  by_key_policy(GetKey gf, Router rf) : gf_(gf), rf_(rf) {
-    // nop
-  }
-  void operator()(actor_system &, actor_pool::uplock &guard,
-                  const actor_pool::actor_vec &vec, mailbox_element_ptr &ptr,
-                  execution_unit *host) {
-    CAF_ASSERT(!vec.empty());
-    type_erased_tuple &tp = ptr->content();
-    Key key = gf_(tp);
-    size_t hashcode = hf_(key);
-    size_t idx = rf_(hashcode, vec.size());
-    CAF_ASSERT(idx > 0 && idx < vec.size());
-    cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << endl;
-    actor selected = vec[idx];
-    guard.unlock();
-    selected->enqueue(std::move(ptr), host);
-  }
-  GetKey gf_;
-  hash<Key> hf_;
-  Router rf_;
-};
-
-template <class Key, class GetKey, class Router>
-actor_pool::policy by_key(GetKey gf, Router rf) {
-  return by_key_policy<Key, GetKey, Router>{gf, rf};
-}
-
-template <class Key, class GetKey> actor_pool::policy by_key(GetKey gf) {
-  return by_key<Key>(gf, [](size_t i, size_t n) { return i % n; });
-}
+using namespace caf_pp;
 
 struct config : actor_system_config {
   config() {

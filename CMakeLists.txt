@@ -29,8 +29,12 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 include(CPack)
 
-# Targets
-add_executable (pattern_test src/pattern_test.cpp)
-target_include_directories(pattern_test PUBLIC "${CAF_INCLUDE}")
-target_link_libraries(pattern_test "${CAF_LIB}" "${PTHREAD}")
 
+# Targets
+add_library(caf_pp libcaf_pp/src/patterns.cpp libcaf_pp/src/policy.cpp libcaf_pp/src/spawn.cpp)
+target_include_directories(caf_pp PUBLIC "${CAF_INCLUDE}")
+target_link_libraries(caf_pp "${CAF_LIB}" pthread)
+
+add_executable (pattern1 examples/pattern1.cpp)
+target_include_directories(pattern1 PUBLIC "${CAF_INCLUDE}" libcaf_pp)
+target_link_libraries(pattern1 caf_pp "${CAF_LIB}")
