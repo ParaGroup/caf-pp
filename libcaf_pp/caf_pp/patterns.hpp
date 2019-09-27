@@ -21,6 +21,20 @@ struct Node : public Pattern {
   caf::optional<actor> instance_;
 };
 
+enum PartitionSched { static_, dynamic_ };
+template <typename Cont> struct Map : public Pattern {
+  using Iter = typename Cont::iterator;
+  using MapFunc = function<void(Iter begin, Iter end)>;
+  // using MapFunc = function<void(Iter begin, Iter end, const Cont &c)>;
+  Map(MapFunc map_fun, uint64_t replicas, PartitionSched sched = static_)
+      : map_fun_(map_fun), replicas_(replicas), sched_(sched) {}
+
+  MapFunc map_fun_;
+  uint64_t replicas_;
+  PartitionSched sched_;
+  caf::optional<actor> instance_;
+};
+
 template <typename T> struct Farm : public Pattern {
   Farm(T &stage, uint64_t replicas, actor_pool::policy policy)
       : stage_(stage), replicas_(replicas), policy_(policy) {

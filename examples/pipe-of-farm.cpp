@@ -121,9 +121,7 @@ void caf_main(actor_system &sys, const config &cfg) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
 
   Node security_node(
-      [&](caf::optional<actor> next) {
-        return sys.spawn<security>(next);
-      });
+      [&](caf::optional<actor> next) { return sys.spawn<security>(next); });
   Node dispatcher_node(
       [&](caf::optional<actor> _) { return sys.spawn<dispatcher>(); });
 

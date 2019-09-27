@@ -31,10 +31,18 @@ include(CPack)
 
 
 # Targets
-add_library(caf_pp libcaf_pp/src/patterns.cpp libcaf_pp/src/policy.cpp libcaf_pp/src/spawn.cpp)
+add_library(caf_pp libcaf_pp/src/patterns.cpp
+                   libcaf_pp/src/policy.cpp
+                   libcaf_pp/src/spawn.cpp
+                   libcaf_pp/src/ns_type.cpp
+                   libcaf_pp/src/map.cpp)
 target_include_directories(caf_pp PUBLIC "${CAF_INCLUDE}")
 target_link_libraries(caf_pp "${CAF_LIB}" pthread)
 
-add_executable (pattern1 examples/pattern1.cpp)
-target_include_directories(pattern1 PUBLIC "${CAF_INCLUDE}" libcaf_pp)
-target_link_libraries(pattern1 caf_pp "${CAF_LIB}")
+add_executable (pipe-of-farm examples/pipe-of-farm.cpp)
+target_include_directories(pipe-of-farm PUBLIC "${CAF_INCLUDE}" libcaf_pp)
+target_link_libraries(pipe-of-farm caf_pp "${CAF_LIB}")
+
+add_executable (pipe-of-map examples/pipe-of-map.cpp)
+target_include_directories(pipe-of-map PUBLIC "${CAF_INCLUDE}" libcaf_pp)
+target_link_libraries(pipe-of-map caf_pp "${CAF_LIB}")
