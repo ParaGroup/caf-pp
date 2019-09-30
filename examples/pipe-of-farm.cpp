@@ -6,15 +6,16 @@
 #include "caf_pp/patterns.hpp"
 #include "caf_pp/policy.hpp"
 #include "caf_pp/spawn.hpp"
+#include "caf_pp/pp_actor.hpp"
 
 using namespace std;
 using namespace caf;
 using namespace caf_pp;
 
-class security : public event_based_actor {
+class security : public pp_actor {
 public:
   security(actor_config &cfg, caf::optional<actor> next)
-      : event_based_actor(cfg), next_(next) {
+      : pp_actor(cfg, next) {
     // nop
   }
 
@@ -35,11 +36,10 @@ public:
       update1(t2, get<1>(values));
       update2(t3, get<2>(values));
 
-      if (next_) {
-        send(next_.value(), key, to_string(1), t1);
-        send(next_.value(), key, to_string(2), t2);
-        send(next_.value(), key, to_string(3), t3);
-      }
+      
+      send_next(key, to_string(1), t1);
+      send_next(key, to_string(2), t2);
+      send_next(key, to_string(3), t3);
     }};
   }
 
@@ -47,14 +47,13 @@ private:
   void update0(int &t, const int &in) { t += in; }
   void update1(int &t, const int &in) { t += in; }
   void update2(int &t, const int &in) { t += in; }
-  caf::optional<actor> next_;
   unordered_map<string, tuple<int, int, int>> instruments_;
 };
 
-class dispatcher : public event_based_actor {
+class dispatcher : public pp_actor {
 public:
   dispatcher(actor_config &cfg, caf::optional<actor> next)
-      : event_based_actor(cfg) {
+      : pp_actor(cfg, next) {
     // nop
   }
 

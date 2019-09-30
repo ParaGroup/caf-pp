@@ -5,6 +5,8 @@
 
 #include "caf/all.hpp"
 
+#include "pp_actor.hpp"
+
 using namespace caf;
 using namespace std;
 
@@ -17,7 +19,10 @@ struct Pattern {};
 template <typename Actor> struct Seq : public Pattern {
 
   Seq() {}
-  Seq(SpawnCb spawn_cb) : spawn_cb_(spawn_cb) {}
+  Seq(SpawnCb spawn_cb) : spawn_cb_(spawn_cb) {
+    static_assert(is_base_of<pp_actor, Actor>::value,
+                  "Actor parameter of Seq must derive from 'pp_actor'");
+  }
   // TODO: add constructor that forward parameters
 
   caf::optional<SpawnCb> spawn_cb_;
