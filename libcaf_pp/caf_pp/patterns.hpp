@@ -10,19 +10,23 @@ using namespace std;
 
 namespace caf_pp {
 
-using SpawnFunc = function<actor(caf::optional<actor>)>;
+using SpawnCb = function<void(actor)>;
 
 struct Pattern {};
 
-struct Node : public Pattern {
-  Node(SpawnFunc spawn_fun) : spawn_fun_(spawn_fun) {}
+template <typename Actor> struct Seq : public Pattern {
 
-  SpawnFunc spawn_fun_;
+  Seq() {}
+  Seq(SpawnCb spawn_cb) : spawn_cb_(spawn_cb) {}
+  // TODO: add constructor that forward parameters
+
+  caf::optional<SpawnCb> spawn_cb_;
   caf::optional<actor> instance_;
 };
 
 enum PartitionSched { static_, dynamic_ };
 template <typename Cont> struct Map : public Pattern {
+  // TODO: check that Cont is a container
   using Iter = typename Cont::iterator;
   using MapFunc = function<void(Iter begin, Iter end)>;
   // using MapFunc = function<void(Iter begin, Iter end, const Cont &c)>;

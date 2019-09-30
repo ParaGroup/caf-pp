@@ -11,26 +11,6 @@ using namespace std;
 using namespace caf;
 using namespace caf_pp;
 
-// class my_general_worker : public event_based_actor {
-// public:
-//   my_general_worker(actor_config &cfg, caf::optional<actor> next, int _,
-//                     string __)
-//       : event_based_actor(cfg), next_(next) {
-//     // nop
-//   }
-
-//   behavior make_behavior() override {
-//     return {[=](string value) {
-//       aout(this) << "\tworker_" << id() << "   value=" << value << endl;
-//       if (next_)
-//         send(next_.value(), value + "[" + to_string(id()) + "]");
-//     }};
-//   }
-
-// private:
-//   caf::optional<actor> next_;
-// };
-
 class security : public event_based_actor {
 public:
   security(actor_config &cfg, caf::optional<actor> next)
@@ -60,7 +40,6 @@ public:
         send(next_.value(), key, to_string(2), t2);
         send(next_.value(), key, to_string(3), t3);
       }
-      cout << "[DEBUG] HERE" << endl;
     }};
   }
 
@@ -74,7 +53,8 @@ private:
 
 class dispatcher : public event_based_actor {
 public:
-  dispatcher(actor_config &cfg) : event_based_actor(cfg) {
+  dispatcher(actor_config &cfg, caf::optional<actor> next)
+      : event_based_actor(cfg) {
     // nop
   }
 
@@ -120,16 +100,14 @@ struct config : actor_system_config {
 void caf_main(actor_system &sys, const config &cfg) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
 
-  Node security_node(
-      [&](caf::optional<actor> next) { return sys.spawn<security>(next); });
-  Node dispatcher_node(
-      [&](caf::optional<actor> _) { return sys.spawn<dispatcher>(); });
-
-  Farm security_farm(security_node, 3, by_key<string>([](type_erased_tuple &t) {
+  Seq<security> security_seq;
+  Seq<dispatcher> dispatcher_seq(
+      [](actor a) { cout << "[DEBUG] init callback call" << endl; });
+  Farm security_farm(security_seq, 3, by_key<string>([](type_erased_tuple &t) {
                        return t.get_as<string>(0);
                      }));
 
-  Farm dispatcher_farm(dispatcher_node, 3,
+  Farm dispatcher_farm(dispatcher_seq, 3,
                        by_key<string>([](type_erased_tuple &t) {
                          return t.get_as<string>(0) + t.get_as<string>(1);
                        }));

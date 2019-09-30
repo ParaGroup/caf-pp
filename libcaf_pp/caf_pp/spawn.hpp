@@ -20,12 +20,17 @@ caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
   return {};
 }
 
-template <>
-caf::optional<actor> spawn_pattern(actor_system &sys, Node &p,
-                                   const caf::optional<actor> &out) {
+// SPAWN NODE
+template <template <class> class P, typename T>
+typename std::enable_if<std::is_same<P<T>, Seq<T>>::value,
+                        caf::optional<actor>>::type
+spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out) {
   cout << "[DEBUG] "
        << "inside NODE spawn" << endl;
-  actor a = p.spawn_fun_(out);
+  auto a = sys.spawn<T>(out);
+  if (p.spawn_cb_) {
+    p.spawn_cb_.value()(a);
+  }
   p.instance_ = caf::optional<actor>(a);
   return a;
 }
@@ -76,7 +81,6 @@ template <template <class> class P, typename... T>
 typename std::enable_if<std::is_same<P<T...>, Pipeline<T...>>::value,
                         caf::optional<actor>>::type
 spawn_pattern(actor_system &sys, P<T...> &p, const caf::optional<actor> &out) {
-  // is Pipeline
   cout << "[DEBUG] "
        << "inside PIPELINE spawn" << endl;
   auto a = for_each_tuple(sys, p.stages_, out).value();
