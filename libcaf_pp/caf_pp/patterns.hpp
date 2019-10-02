@@ -25,6 +25,10 @@ template <typename Actor> struct Seq : public Pattern {
                   "Actor parameter of Seq must derive from 'pp_actor'");
   }
   // TODO: add constructor that forward parameters
+  // read: https://stackoverflow.com/questions/57563594/partial-class-template-argument-deduction-in-c17
+  //       https://stackoverflow.com/questions/41833630/c17-class-template-partial-deduction
+  // In order to implement the forwarding parameters features it is probabily
+  // necessary to implement a method 'make_seq' like the std::tuple class
 
   caf::optional<SpawnCb> spawn_cb_;
   caf::optional<actor> instance_;
