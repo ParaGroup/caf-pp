@@ -102,18 +102,17 @@ void caf_main(actor_system &sys, const config &cfg) {
   Seq<security> security_seq;
   Seq<dispatcher> dispatcher_seq(
       [](actor a) { cout << "[DEBUG] init callback call" << endl; });
-  Farm security_farm(security_seq, 3, by_key<string>([](type_erased_tuple &t) {
+  Farm security_farm(security_seq, by_key<string>([](type_erased_tuple &t) {
                        return t.get_as<string>(0);
-                     }));
+                     }), 3);
 
-  Farm dispatcher_farm(dispatcher_seq, 3,
-                       by_key<string>([](type_erased_tuple &t) {
+  Farm dispatcher_farm(dispatcher_seq, by_key<string>([](type_erased_tuple &t) {
                          return t.get_as<string>(0) + t.get_as<string>(1);
-                       }));
+                       }), 3);
 
   Pipeline pipe(security_farm, dispatcher_farm);
 
-  auto first = spawn_pattern(sys, pipe, caf::optional<actor>()).value();
+  auto first = spawn_pattern(sys, pipe, caf::optional<actor>(), Runtime::threads).value();
 
   // subscribe 2 clients
   auto c1 = sys.spawn<client>();

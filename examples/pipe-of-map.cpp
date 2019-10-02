@@ -37,7 +37,7 @@ void caf_main(actor_system &sys, const config &cfg) {
           *it += 1;
         }
       },
-      3, PartitionSched::static_);
+      PartitionSched::static_, 3);
 
   Map<Container> mapDynamic(
       [=](Iterator begin, Iterator end) {
@@ -45,10 +45,10 @@ void caf_main(actor_system &sys, const config &cfg) {
           *it += 1;
         }
       },
-      3, PartitionSched::dynamic_);
+      PartitionSched::dynamic_, 3);
 
   Pipeline pipe(mapStatic, mapDynamic);
-  auto first = spawn_pattern(sys, pipe, actor_cast<actor>(self)).value();
+  auto first = spawn_pattern(sys, pipe, actor_cast<actor>(self), Runtime::actors).value();
 
   auto vec = vector<int64_t>();
   for (auto i = 10; i > 0; --i) {

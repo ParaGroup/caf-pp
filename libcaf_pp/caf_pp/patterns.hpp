@@ -13,6 +13,7 @@ using namespace std;
 namespace caf_pp {
 
 using SpawnCb = function<void(actor)>;
+enum PartitionSched { static_, dynamic_ };
 
 struct Pattern {};
 
@@ -29,31 +30,30 @@ template <typename Actor> struct Seq : public Pattern {
   caf::optional<actor> instance_;
 };
 
-enum PartitionSched { static_, dynamic_ };
 template <typename Cont> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Iter = typename Cont::iterator;
   using MapFunc = function<void(Iter begin, Iter end)>;
   // using MapFunc = function<void(Iter begin, Iter end, const Cont &c)>;
-  Map(MapFunc map_fun, uint64_t replicas, PartitionSched sched = static_)
-      : map_fun_(map_fun), replicas_(replicas), sched_(sched) {}
+  Map(MapFunc map_fun, PartitionSched sched, uint64_t replicas)
+      : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
 
   MapFunc map_fun_;
-  uint64_t replicas_;
   PartitionSched sched_;
+  uint64_t replicas_;
   caf::optional<actor> instance_;
 };
 
 template <typename T> struct Farm : public Pattern {
-  Farm(T &stage, uint64_t replicas, actor_pool::policy policy)
-      : stage_(stage), replicas_(replicas), policy_(policy) {
+  Farm(T &stage, actor_pool::policy policy,  uint64_t replicas)
+      : stage_(stage), policy_(policy), replicas_(replicas){
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
 
   T &stage_;
-  uint64_t replicas_;
   actor_pool::policy policy_;
+  uint64_t replicas_;
   caf::optional<actor> instance_;
 };
 
