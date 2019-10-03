@@ -2,6 +2,7 @@
 
 #include "caf/all.hpp"
 
+#include "dac.hpp"
 #include "map.hpp"
 #include "patterns.hpp"
 
@@ -11,6 +12,12 @@ using namespace std;
 namespace caf_pp {
 
 enum Runtime { threads, actors };
+
+template <class T>
+caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
+                                   const caf::optional<actor> &out) {
+  return spawn_pattern(sys, p, out, Runtime::actors);
+}
 
 template <class T>
 caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
@@ -98,7 +105,13 @@ typename std::enable_if<std::is_same<P<Op, Res>, DivConq<Op, Res>>::value,
                         caf::optional<actor>>::type
 spawn_pattern(actor_system &sys, P<Op, Res> &p, const caf::optional<actor> &out,
               Runtime m) {
-  // TODO: implement
+  cout << "[DEBUG] "
+       << "inside DIVCONQ spawn" << endl;
+  // TODO: implement version with promis if there is no next
+  auto dac = sys.spawn(dac_fun<Op, Res>, out.value(), p.div_fun_, p.merg_fun_,
+                       p.seq_fun_, p.cond_fun_);
+  p.instance_ = caf::optional<actor>(dac);
+  return dac;
 }
 
 // SPAWN PIPELINE

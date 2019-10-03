@@ -25,8 +25,9 @@ template <typename Actor> struct Seq : public Pattern {
                   "Actor parameter of Seq must derive from 'pp_actor'");
   }
   // TODO: add constructor that forward parameters
-  // read: https://stackoverflow.com/questions/57563594/partial-class-template-argument-deduction-in-c17
-  //       https://stackoverflow.com/questions/41833630/c17-class-template-partial-deduction
+  // read:
+  // https://stackoverflow.com/questions/57563594/partial-class-template-argument-deduction-in-c17
+  // https://stackoverflow.com/questions/41833630/c17-class-template-partial-deduction
   // In order to implement the forwarding parameters features it is probabily
   // necessary to implement a method 'make_seq' like the std::tuple class
 
@@ -49,22 +50,24 @@ template <typename Cont> struct Map : public Pattern {
 };
 
 template <typename Op, typename Res> struct DivConq : public Pattern {
-  using DivFun = function<vector<Op>(Op&)>;
-  using MergFun = function<Res(vector<Res>&)>;
-  using SeqFun = function<Res(Op&)>;
+  using DivFun = function<vector<Op>(Op &)>;
+  using MergFun = function<Res(vector<Res> &)>;
+  using SeqFun = function<Res(Op &)>;
   using CondFun = function<bool(const Op &)>;
   DivConq(DivFun div_fun, MergFun merg_fun, SeqFun seq_fun, CondFun cond_fun)
-    : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun), cond_fun_(cond_fun) {}
+      : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun),
+        cond_fun_(cond_fun) {}
 
   DivFun div_fun_;
   MergFun merg_fun_;
   SeqFun seq_fun_;
   CondFun cond_fun_;
+  caf::optional<actor> instance_;
 };
 
 template <typename T> struct Farm : public Pattern {
-  Farm(T &stage, actor_pool::policy policy,  uint64_t replicas)
-      : stage_(stage), policy_(policy), replicas_(replicas){
+  Farm(T &stage, actor_pool::policy policy, uint64_t replicas)
+      : stage_(stage), policy_(policy), replicas_(replicas) {
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }

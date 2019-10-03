@@ -36,6 +36,7 @@ add_library(caf_pp libcaf_pp/src/patterns.cpp
                    libcaf_pp/src/spawn.cpp
                    libcaf_pp/src/ns_type.cpp
                    libcaf_pp/src/map.cpp
+                   libcaf_pp/src/dac.cpp
                    libcaf_pp/src/pp_actor.cpp)
 target_include_directories(caf_pp PUBLIC "${CAF_INCLUDE}")
 target_link_libraries(caf_pp "${CAF_LIB}" pthread)
