@@ -10,10 +10,7 @@ using namespace std;
 
 namespace caf_pp {
 
-enum Runtime {
-  threads,
-  actors
-};
+enum Runtime { threads, actors };
 
 template <class T>
 caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
@@ -93,6 +90,15 @@ spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
   }
   p.instance_ = caf::optional<actor>(map);
   return map;
+}
+
+// SPAWN DIVCONQ
+template <template <class, class> class P, typename Op, typename Res>
+typename std::enable_if<std::is_same<P<Op, Res>, DivConq<Op, Res>>::value,
+                        caf::optional<actor>>::type
+spawn_pattern(actor_system &sys, P<Op, Res> &p, const caf::optional<actor> &out,
+              Runtime m) {
+  // TODO: implement
 }
 
 // SPAWN PIPELINE

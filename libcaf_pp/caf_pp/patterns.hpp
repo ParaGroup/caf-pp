@@ -48,6 +48,20 @@ template <typename Cont> struct Map : public Pattern {
   caf::optional<actor> instance_;
 };
 
+template <typename Op, typename Res> struct DivConq : public Pattern {
+  using DivFun = function<vector<Op>(Op&)>;
+  using MergFun = function<Res(vector<Res>&)>;
+  using SeqFun = function<Res(Op&)>;
+  using CondFun = function<bool(const Op &)>;
+  DivConq(DivFun div_fun, MergFun merg_fun, SeqFun seq_fun, CondFun cond_fun)
+    : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun), cond_fun_(cond_fun) {}
+
+  DivFun div_fun_;
+  MergFun merg_fun_;
+  SeqFun seq_fun_;
+  CondFun cond_fun_;
+};
+
 template <typename T> struct Farm : public Pattern {
   Farm(T &stage, actor_pool::policy policy,  uint64_t replicas)
       : stage_(stage), policy_(policy), replicas_(replicas){

@@ -47,3 +47,7 @@ target_link_libraries(pipe-of-farm caf_pp "${CAF_LIB}")
 add_executable (pipe-of-map examples/pipe-of-map.cpp)
 target_include_directories(pipe-of-map PUBLIC "${CAF_INCLUDE}" libcaf_pp)
 target_link_libraries(pipe-of-map caf_pp "${CAF_LIB}")
+
+add_executable (divide-conquer examples/divide-conquer.cpp)
+target_include_directories(divide-conquer PUBLIC "${CAF_INCLUDE}" libcaf_pp)
+target_link_libraries(divide-conquer caf_pp "${CAF_LIB}")
