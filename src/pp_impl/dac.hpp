@@ -2,12 +2,16 @@
 
 #include "caf/all.hpp"
 
-#include "ns_type.hpp"
+#include "../utils/ns_type.hpp"
 
 using namespace caf;
 using namespace std;
 
 namespace caf_pp {
+namespace pp_impl {
+
+using namespace utils;
+
 using up = atom_constant<caf::atom("up")>;
 template <typename Res> struct dac_state {
   int num_fragments;
@@ -51,4 +55,5 @@ behavior dac_fun(stateful_actor<dac_state<Res>> *self, actor parent_,
             }
           }};
 }
+} // namespace pp_impl
 } // namespace caf_pp

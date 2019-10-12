@@ -15,7 +15,7 @@ struct pp_actor : public event_based_actor {
     // nop
   }
 
-  template <typename ...Args> void send_next(Args ...args) {
+  template <typename... Args> void send_next(Args... args) {
     if (next_) {
       send(next_.value(), forward<Args>(args)...);
     }

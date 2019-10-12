@@ -5,6 +5,7 @@
 using namespace caf;
 
 namespace caf_pp {
+namespace utils {
 
 template <class T> struct ns_type {
   ns_type(T &&obj) {
@@ -43,4 +44,5 @@ typename Inspector::result_type inspect(Inspector &f, ns_type<T> &x) {
   //     cout << "  [DEBUG] ns_type inspector" << endl;
   return f(meta::type_name("ns_type"), *x);
 }
+} // namespace utils
 } // namespace caf_pp

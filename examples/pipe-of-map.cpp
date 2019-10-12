@@ -3,9 +3,9 @@
 
 #include "caf/all.hpp"
 
-#include "caf_pp/patterns.hpp"
-#include "caf_pp/policy.hpp"
-#include "caf_pp/spawn.hpp"
+#include "patterns.hpp"
+#include "policy.hpp"
+#include "spawn.hpp"
 
 using namespace std;
 using namespace caf;
@@ -48,7 +48,9 @@ void caf_main(actor_system &sys, const config &cfg) {
       PartitionSched::dynamic_, 3);
 
   Pipeline pipe(mapStatic, mapDynamic);
-  auto first = spawn_pattern(sys, pipe, actor_cast<actor>(self), Runtime::actors).value();
+  auto first =
+      spawn_pattern(sys, pipe, actor_cast<actor>(self), Runtime::actors)
+          .value();
 
   auto vec = vector<int64_t>();
   for (auto i = 10; i > 0; --i) {

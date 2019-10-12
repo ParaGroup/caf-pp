@@ -31,14 +31,14 @@ include(CPack)
 
 
 # Targets
-add_library(caf_pp libcaf_pp/src/patterns.cpp
-                   libcaf_pp/src/policy.cpp
-                   libcaf_pp/src/spawn.cpp
-                   libcaf_pp/src/ns_type.cpp
-                   libcaf_pp/src/map.cpp
-                   libcaf_pp/src/dac.cpp
-                   libcaf_pp/src/pp_actor.cpp)
-target_include_directories(caf_pp PUBLIC "${CAF_INCLUDE}")
+add_library(caf_pp src/patterns.cpp
+                   src/policy.cpp
+                   src/spawn.cpp
+                   src/pp_actor.cpp
+                   src/utils/ns_type.cpp
+                   src/pp_impl/map.cpp
+                   src/pp_impl/dac.cpp)
+target_include_directories(caf_pp PUBLIC ./include ./src "${CAF_INCLUDE}" )
 target_link_libraries(caf_pp "${CAF_LIB}" pthread)
 
 add_executable (pipe-of-farm examples/pipe-of-farm.cpp)

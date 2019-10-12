@@ -3,8 +3,8 @@
 
 #include "caf/all.hpp"
 
-#include "caf_pp/patterns.hpp"
-#include "caf_pp/spawn.hpp"
+#include "patterns.hpp"
+#include "spawn.hpp"
 
 using namespace std;
 using namespace caf;
@@ -74,7 +74,7 @@ void caf_main(actor_system &sys, const config &cfg) {
     return move(op);
   };
   auto cond = [](const Operand &op) -> bool {
-    // sto recursion and execute sequential
+    // stop recursion and execute sequential
     return array_size(op.left, op.right) < 2;
   };
   DivConq<Operand, Result> dac(div, merge, seq, cond);

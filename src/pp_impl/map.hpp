@@ -2,12 +2,14 @@
 
 #include "caf/all.hpp"
 
-#include "ns_type.hpp"
+#include "../utils/ns_type.hpp"
 
 using namespace caf;
 using namespace std;
-
 namespace caf_pp {
+namespace pp_impl {
+
+using namespace utils;
 
 using ok = atom_constant<caf::atom("ok")>;
 
@@ -139,5 +141,5 @@ behavior map_dynamic_actor(stateful_actor<map_state> *self,
     return promis;
   }};
 }
-
+} // namespace pp_impl
 } // namespace caf_pp

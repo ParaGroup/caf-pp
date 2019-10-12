@@ -2,14 +2,16 @@
 
 #include "caf/all.hpp"
 
-#include "dac.hpp"
-#include "map.hpp"
 #include "patterns.hpp"
+#include "pp_impl/dac.hpp"
+#include "pp_impl/map.hpp"
 
 using namespace caf;
 using namespace std;
 
 namespace caf_pp {
+
+using namespace pp_impl;
 
 enum Runtime { threads, actors };
 

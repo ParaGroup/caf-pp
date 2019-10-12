@@ -3,10 +3,10 @@
 
 #include "caf/all.hpp"
 
-#include "caf_pp/patterns.hpp"
-#include "caf_pp/policy.hpp"
-#include "caf_pp/spawn.hpp"
-#include "caf_pp/pp_actor.hpp"
+#include "patterns.hpp"
+#include "policy.hpp"
+#include "pp_actor.hpp"
+#include "spawn.hpp"
 
 using namespace std;
 using namespace caf;
@@ -14,8 +14,7 @@ using namespace caf_pp;
 
 class security : public pp_actor {
 public:
-  security(actor_config &cfg, caf::optional<actor> next)
-      : pp_actor(cfg, next) {
+  security(actor_config &cfg, caf::optional<actor> next) : pp_actor(cfg, next) {
     // nop
   }
 
@@ -36,7 +35,6 @@ public:
       update1(t2, get<1>(values));
       update2(t3, get<2>(values));
 
-      
       send_next(key, to_string(1), t1);
       send_next(key, to_string(2), t2);
       send_next(key, to_string(3), t3);
@@ -104,15 +102,19 @@ void caf_main(actor_system &sys, const config &cfg) {
       [](actor a) { cout << "[DEBUG] init callback call" << endl; });
   Farm security_farm(security_seq, by_key<string>([](type_erased_tuple &t) {
                        return t.get_as<string>(0);
-                     }), 3);
+                     }),
+                     3);
 
   Farm dispatcher_farm(dispatcher_seq, by_key<string>([](type_erased_tuple &t) {
                          return t.get_as<string>(0) + t.get_as<string>(1);
-                       }), 3);
+                       }),
+                       3);
 
   Pipeline pipe(security_farm, dispatcher_farm);
 
-  auto first = spawn_pattern(sys, pipe, caf::optional<actor>(), Runtime::threads).value();
+  auto first =
+      spawn_pattern(sys, pipe, caf::optional<actor>(), Runtime::threads)
+          .value();
 
   // subscribe 2 clients
   auto c1 = sys.spawn<client>();
