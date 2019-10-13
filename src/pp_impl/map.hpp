@@ -2,7 +2,7 @@
 
 #include "caf/all.hpp"
 
-#include "../utils/ns_type.hpp"
+#include "utils/ns_type.hpp"
 
 using namespace caf;
 using namespace std;
@@ -64,6 +64,7 @@ behavior map_static_actor(stateful_actor<map_state> *self,
         Container c = ns_c.release();
         if (out_) {
           self->send(out_.value(), move(c));
+          promis.deliver(0);
         } else {
           promis.deliver(move(c));
         }

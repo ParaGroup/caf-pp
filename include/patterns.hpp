@@ -6,11 +6,13 @@
 #include "caf/all.hpp"
 
 #include "pp_actor.hpp"
+#include "utils/range.hpp"
 
 using namespace caf;
 using namespace std;
 
 namespace caf_pp {
+using namespace utils;
 
 using SpawnCb = function<void(actor)>;
 enum PartitionSched { static_, dynamic_ };
@@ -39,7 +41,6 @@ template <typename Cont> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Iter = typename Cont::iterator;
   using MapFunc = function<void(Iter begin, Iter end)>;
-  // using MapFunc = function<void(Iter begin, Iter end, const Cont &c)>;
   Map(MapFunc map_fun, PartitionSched sched, uint64_t replicas)
       : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
 
@@ -49,11 +50,13 @@ template <typename Cont> struct Map : public Pattern {
   caf::optional<actor> instance_;
 };
 
-template <typename Op, typename Res> struct DivConq : public Pattern {
-  using DivFun = function<vector<Op>(Op &)>;
-  using MergFun = function<Res(vector<Res> &)>;
-  using SeqFun = function<Res(Op &)>;
-  using CondFun = function<bool(const Op &)>;
+template <typename C> struct DivConq : public Pattern {
+  // TODO: check that Cont is a container
+  using I = typename C::iterator;
+  using DivFun = function<vector<Range<I>>(Range<I> &)>;
+  using MergFun = function<Range<I>(vector<Range<I>> &)>;
+  using SeqFun = function<Range<I>(Range<I> &)>;
+  using CondFun = function<bool(Range<I> &)>;
   DivConq(DivFun div_fun, MergFun merg_fun, SeqFun seq_fun, CondFun cond_fun)
       : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun),
         cond_fun_(cond_fun) {}

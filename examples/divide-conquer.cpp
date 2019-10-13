@@ -10,14 +10,6 @@ using namespace std;
 using namespace caf;
 using namespace caf_pp;
 
-struct Operand {
-  vector<int64_t> &data;
-  size_t left;
-  size_t right;
-};
-using Result = Operand;
-CAF_ALLOW_UNSAFE_MESSAGE_TYPE(Operand)
-
 template <class T> string con_to_string(const T &c) {
   string res{""};
   size_t i{0};
@@ -28,8 +20,6 @@ template <class T> string con_to_string(const T &c) {
   return res;
 }
 
-inline size_t array_size(size_t left, size_t right) { return right - left + 1; }
-
 struct config : actor_system_config {
   config() { opt_group{custom_options_, "global"}; }
 };
@@ -38,59 +28,60 @@ void caf_main(actor_system &sys, const config &cfg) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
   scoped_actor self{sys};
 
-  auto div = [](Operand &op) -> vector<Operand> {
+  using Cont = vector<int64_t>;
+  using I = Cont::iterator;
+  auto div = [](Range<I> &op) -> vector<Range<I>> {
     // divide the input
-    long pivot = op.data[(op.left + op.right) / 2];
-    size_t i = op.left - 1, j = op.right + 1;
+    auto start = op.begin();
+    auto end = op.end();
+    long pivot = *(start + (distance(start, end) / 2));
+    auto i = start - 1, j = end + 1;
     long tmp;
 
     while (true) {
       do {
         i++;
-      } while (op.data[i] < pivot);
+      } while (*i < pivot);
       do {
         j--;
-      } while (op.data[j] > pivot);
+      } while (*j > pivot);
 
       if (i >= j)
         break;
 
       // swap
-      tmp = op.data[i];
-      op.data[i] = op.data[j];
-      op.data[j] = tmp;
+      tmp = *i;
+      *i = *j;
+      *j = tmp;
     }
-    return {Operand{op.data, op.left, j}, Operand{op.data, j + 1, op.right}};
+    return {{start, j}, {j + 1, end}};
   };
-  auto merge = [](vector<Result> &v_res) -> Result {
+  auto merge = [](vector<Range<I>> &v_res) -> Range<I> {
     // merge the output
-    return {v_res[0].data, v_res[0].left, v_res[1].right};
+    return {v_res[0].begin(), v_res[1].end()};
   };
-  auto seq = [=](Operand &op) -> Result {
+  auto seq = [=](Range<I> &op) -> Range<I> {
     // sequential version
-    if (array_size(op.left, op.right) > 2) {
-      std::sort(op.data.begin() + op.left, op.data.begin() + op.right + 1);
+    if (distance(op.begin(), op.end()) > 2) {
+      std::sort(op.begin(), op.end());
     }
     return move(op);
   };
-  auto cond = [](const Operand &op) -> bool {
+  auto cond = [](Range<I> &op) -> bool {
     // stop recursion and execute sequential
-    return array_size(op.left, op.right) < 2;
+    return distance(op.begin(), op.end()) < 2;
   };
-  DivConq<Operand, Result> dac(div, merge, seq, cond);
-
-  auto handle = spawn_pattern(sys, dac, actor_cast<actor>(self)).value();
+  DivConq<Cont> dac(div, merge, seq, cond);
+  auto handle = spawn_pattern(sys, dac, caf::optional<actor>()).value();
 
   vector<int64_t> vec{3, 4, 1, 7, 8, 5, 2};
-  Operand op{vec, 0, 7};
-  aout(self) << "main_ (" << con_to_string(op.data) << ")" << endl;
-
-  self->send(handle, op);
-  self->receive(
-      [&](up, Result &res) {
-        aout(self) << "main_ (" << con_to_string(res.data) << ")" << endl;
-      },
-      [&self](error &_) { aout(self) << "error_" << _ << endl; });
+  aout(self) << "main_ (" << con_to_string(vec) << ")" << endl;
+  self->request(handle, caf::infinite, move(vec))
+      .receive(
+          [&](vector<int64_t> &vec) {
+            aout(self) << "main_ (" << con_to_string(vec) << ")" << endl;
+          },
+          [&self](error &_) { aout(self) << "error_" << _ << endl; });
 }
 
 CAF_MAIN()

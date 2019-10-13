@@ -102,16 +102,15 @@ spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
 }
 
 // SPAWN DIVCONQ
-template <template <class, class> class P, typename Op, typename Res>
-typename std::enable_if<std::is_same<P<Op, Res>, DivConq<Op, Res>>::value,
+template <template <class> class P, typename C>
+typename std::enable_if<std::is_same<P<C>, DivConq<C>>::value,
                         caf::optional<actor>>::type
-spawn_pattern(actor_system &sys, P<Op, Res> &p, const caf::optional<actor> &out,
+spawn_pattern(actor_system &sys, P<C> &p, const caf::optional<actor> &out,
               Runtime m) {
   cout << "[DEBUG] "
        << "inside DIVCONQ spawn" << endl;
-  // TODO: implement version with promis if there is no next
-  auto dac = sys.spawn(dac_fun<Op, Res>, out.value(), p.div_fun_, p.merg_fun_,
-                       p.seq_fun_, p.cond_fun_);
+  using I = typename C::iterator;
+  auto dac = sys.spawn(dac_master_fun<C,I>, p, out);
   p.instance_ = caf::optional<actor>(dac);
   return dac;
 }
