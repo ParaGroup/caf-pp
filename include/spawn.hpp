@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "caf/all.hpp"
 
 #include "patterns.hpp"
@@ -88,14 +90,15 @@ spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
   cout << "[DEBUG] "
        << "inside Map spawn" << endl;
   using Iter = typename T::iterator;
+  using namespace PartitionSched;
   actor map;
-  switch (p.sched_) {
-  case PartitionSched::static_:
+  if (holds_alternative<static_>(p.sched_)) {
     map = sys.spawn(map_static_actor<T, Iter>, p.map_fun_, p.replicas_, out);
-    break;
-  case PartitionSched::dynamic_:
-    map = sys.spawn(map_dynamic_actor<T, Iter>, p.map_fun_, p.replicas_, out);
-    break;
+  }
+  if (holds_alternative<dynamic_>(p.sched_)) {
+    auto partition = get<dynamic_>(p.sched_).partition;
+    map = sys.spawn(map_dynamic_actor<T, Iter>, p.map_fun_, p.replicas_,
+                    partition, out);
   }
   p.instance_ = caf::optional<actor>(map);
   return map;
@@ -110,7 +113,7 @@ spawn_pattern(actor_system &sys, P<C> &p, const caf::optional<actor> &out,
   cout << "[DEBUG] "
        << "inside DIVCONQ spawn" << endl;
   using I = typename C::iterator;
-  auto dac = sys.spawn(dac_master_fun<C,I>, p, out);
+  auto dac = sys.spawn(dac_master_fun<C, I>, p, out);
   p.instance_ = caf::optional<actor>(dac);
   return dac;
 }

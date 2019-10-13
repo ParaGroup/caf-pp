@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <typeinfo>
+#include <variant>
 
 #include "caf/all.hpp"
 
@@ -14,11 +15,9 @@ using namespace std;
 namespace caf_pp {
 using namespace utils;
 
-using SpawnCb = function<void(actor)>;
-enum PartitionSched { static_, dynamic_ };
-
 struct Pattern {};
 
+using SpawnCb = function<void(actor)>;
 template <typename Actor> struct Seq : public Pattern {
 
   Seq() {}
@@ -37,15 +36,23 @@ template <typename Actor> struct Seq : public Pattern {
   caf::optional<actor> instance_;
 };
 
+namespace PartitionSched {
+struct static_ {};
+struct dynamic_ {
+  size_t partition=1;
+};
+} // namespace PartitionSched
 template <typename Cont> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Iter = typename Cont::iterator;
   using MapFunc = function<void(Iter begin, Iter end)>;
-  Map(MapFunc map_fun, PartitionSched sched, uint64_t replicas)
+  using PartitionVar =
+      std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
+  Map(MapFunc map_fun, PartitionVar sched, uint64_t replicas)
       : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
 
   MapFunc map_fun_;
-  PartitionSched sched_;
+  PartitionVar sched_;
   uint64_t replicas_;
   caf::optional<actor> instance_;
 };

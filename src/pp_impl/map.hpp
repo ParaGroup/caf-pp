@@ -90,7 +90,8 @@ behavior map_static_actor(stateful_actor<map_state> *self,
 atomic<size_t> *atomic_i;
 template <class Container, class Iterator>
 behavior map_dynamic_worker_actor(event_based_actor *self,
-                                  function<void(Iterator, Iterator)> fun_) {
+                                  function<void(Iterator, Iterator)> fun_,
+                                  size_t partition_) {
   return {[=](ns_type<Container> &ns_c) {
     // if (__verbose__)
     //   caf::aout(self) << "actor" << self->id() << "_ (" <<
@@ -98,10 +99,10 @@ behavior map_dynamic_worker_actor(event_based_actor *self,
     //                   << ") [" << start << ":" << end << "]" << endl;
     size_t i;
     size_t size = ns_c->size();
-    while ((i = atomic_i->fetch_add(1)) < size) {
+    while ((i = atomic_i->fetch_add(partition_)) < size) {
       Iterator it_start = ns_c->begin();
       it_start += i;
-      auto it_end = it_start + 1;
+      auto it_end = it_start + partition_;
       fun_(move(it_start), move(it_end));
     }
     return ok::value;
@@ -111,10 +112,11 @@ behavior map_dynamic_worker_actor(event_based_actor *self,
 template <class Container, class Iterator>
 behavior map_dynamic_actor(stateful_actor<map_state> *self,
                            function<void(Iterator, Iterator)> fun_,
-                           uint32_t nw_, caf::optional<actor> out_) {
+                           uint32_t nw_, size_t partition_,
+                           caf::optional<actor> out_) {
   for (auto i = 0u; i < nw_; i++) {
-    self->state.worker.push_back(
-        self->spawn(map_dynamic_worker_actor<Container, Iterator>, fun_));
+    self->state.worker.push_back(self->spawn(
+        map_dynamic_worker_actor<Container, Iterator>, fun_, partition_));
   }
 
   return {[=](Container c) mutable {

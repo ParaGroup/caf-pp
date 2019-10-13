@@ -37,7 +37,7 @@ void caf_main(actor_system &sys, const config &cfg) {
           *it += 1;
         }
       },
-      PartitionSched::static_, 3);
+      PartitionSched::static_(), 3);
 
   Map<Container> mapDynamic(
       [=](Iterator begin, Iterator end) {
@@ -45,7 +45,7 @@ void caf_main(actor_system &sys, const config &cfg) {
           *it += 1;
         }
       },
-      PartitionSched::dynamic_, 3);
+      PartitionSched::dynamic_{1}, 3);
 
   Pipeline pipe(mapStatic, mapDynamic);
   auto first =
