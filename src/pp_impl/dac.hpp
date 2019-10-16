@@ -18,45 +18,47 @@ using namespace utils;
 using up = atom_constant<caf::atom("up")>;
 using down = atom_constant<caf::atom("down")>;
 
-template <typename T> struct dac_state {
+template <typename Cnt> struct dac_state {
+  using Itr = typename Cnt::iterator;
+  using Rng = ranges::subrange<Itr>;
   int num_fragments;
-  vector<T> partial_res;
+  vector<Rng> partial_res;
 };
-template <typename C, typename I>
-behavior dac_worker_fun(stateful_actor<dac_state<Range<I>>> *self,
-                        DivConq<C> p_, actor parent_) {
+template <typename Cnt>
+behavior dac_worker_fun(stateful_actor<dac_state<Cnt>> *self,
+                        DivConq<Cnt> p_, actor parent_) {
   self->state.num_fragments = 0;
-
+  using Itr = typename Cnt::iterator;
+  using Rng = ranges::subrange<Itr>;
   // utility functions
-  auto create_range = [=](ns_type<C> &ns_c, size_t start,
-                          size_t end) -> Range<I> {
+  auto create_range = [=](ns_type<Cnt> &ns_c, size_t start,
+                          size_t end) -> Rng {
     assert(start >= 0 && end <= ns_c->size());
-    I it_start = ns_c->begin() + start;
-    I it_end = ns_c->begin() + end;
-    return {it_start, it_end};
+    return ranges::views::slice(*ns_c, start, end);
   };
-  auto create_index = [=](ns_type<C> &ns_c,
-                          Range<I> range) -> tuple<size_t, size_t> {
+  auto create_index = [=](ns_type<Cnt> &ns_c,
+                          Rng range) -> tuple<size_t, size_t> {
+                            
     size_t start = range.begin() - ns_c->begin();
     size_t end = range.end() - ns_c->begin();
     return {start, end};
   };
-  auto send_parent_and_terminate = [=](ns_type<C> &ns_c, Range<I> &res) {
+  auto send_parent_and_terminate = [=](ns_type<Cnt> &ns_c, Rng &res) {
     tuple<size_t, size_t> t = create_index(ns_c, res);
     self->send(parent_, up::value, ns_c, size_t(get<0>(t)), size_t(get<1>(t)));
     self->quit();
   };
-  return {[=](down, ns_type<C> &ns_c, size_t start, size_t end) {
+  return {[=](down, ns_type<Cnt> &ns_c, size_t start, size_t end) {
             // divide
             auto &s = self->state;
-            Range<I> op = create_range(ns_c, start, end);
+            Rng op = create_range(ns_c, start, end);
             if (p_.cond_fun_(op)) {
-              Range<I> res = p_.seq_fun_(op);
+              Rng res = p_.seq_fun_(op);
               send_parent_and_terminate(ns_c, res);
             } else {
               auto ops = p_.div_fun_(op);
               for (auto &op : ops) {
-                auto a = self->spawn(dac_worker_fun<C, I>, p_,
+                auto a = self->spawn(dac_worker_fun<Cnt, I>, p_,
                                      actor_cast<actor>(self));
                 auto t = create_index(ns_c, op);
                 self->send(a, down::value, ns_c, get<0>(t), get<1>(t));
@@ -64,14 +66,14 @@ behavior dac_worker_fun(stateful_actor<dac_state<Range<I>>> *self,
               }
             }
           },
-          [=](up, ns_type<C> &ns_c, size_t start, size_t end) {
+          [=](up, ns_type<Cnt> &ns_c, size_t start, size_t end) {
             // merge
             auto &s = self->state;
             s.num_fragments -= 1;
             auto res = create_range(ns_c, start, end);
             s.partial_res.push_back(move(res));
             if (s.num_fragments == 0) {
-              Range<I> res = p_.merg_fun_(s.partial_res);
+              Rng res = p_.merg_fun_(s.partial_res);
               send_parent_and_terminate(ns_c, res);
             }
           }};
@@ -80,22 +82,22 @@ behavior dac_worker_fun(stateful_actor<dac_state<Range<I>>> *self,
 struct dac_master_state {
   response_promise promis;
 };
-template <typename C, typename I>
-behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<C> p_,
+template <typename Cnt>
+behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
                         caf::optional<actor> out_) {
-  return {[=](C &c) mutable {
+  return {[=](Cnt &c) mutable {
             // divide
-            ns_type<C> ns_c(move(c));
+            ns_type<Cnt> ns_c(move(c));
 
             auto a =
-                self->spawn(dac_worker_fun<C, I>, p_, actor_cast<actor>(self));
+                self->spawn(dac_worker_fun<Cnt>, p_, actor_cast<actor>(self));
 
             self->state.promis = self->make_response_promise();
             self->send(a, down::value, ns_c, size_t(0), ns_c->size());
             return self->state.promis;
           },
-          [=](up, ns_type<C> ns_c, size_t, size_t) mutable {
-            C c = ns_c.release();
+          [=](up, ns_type<Cnt> ns_c, size_t, size_t) mutable {
+            Cnt c = ns_c.release();
             if (out_) {
               self->send(out_.value(), move(c));
               self->state.promis.deliver(0);

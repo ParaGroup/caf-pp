@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "caf/all.hpp"
+#include <range/v3/all.hpp>
 
 #include "pp_actor.hpp"
 #include "utils/range.hpp"
@@ -42,28 +43,31 @@ struct dynamic_ {
   size_t partition=1;
 };
 } // namespace PartitionSched
-template <typename Cont> struct Map : public Pattern {
+template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container
-  using Iter = typename Cont::iterator;
-  using MapFunc = function<void(Iter begin, Iter end)>;
+  using Itr = typename Cnt::iterator;
+  using Rng = ranges::subrange<Itr>;
+  using Fnc = function<void(Rng)>;
   using PartitionVar =
       std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
-  Map(MapFunc map_fun, PartitionVar sched, uint64_t replicas)
+  Map(Fnc map_fun, PartitionVar sched, uint64_t replicas)
       : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
 
-  MapFunc map_fun_;
+  Fnc map_fun_;
   PartitionVar sched_;
   uint64_t replicas_;
   caf::optional<actor> instance_;
 };
 
-template <typename C> struct DivConq : public Pattern {
+template <typename Cnt> struct DivConq : public Pattern {
   // TODO: check that Cont is a container
-  using I = typename C::iterator;
-  using DivFun = function<vector<Range<I>>(Range<I> &)>;
-  using MergFun = function<Range<I>(vector<Range<I>> &)>;
-  using SeqFun = function<Range<I>(Range<I> &)>;
-  using CondFun = function<bool(Range<I> &)>;
+  using Itr = typename Cnt::iterator;
+  using Rng = ranges::subrange<Itr>;
+  using Fnc = function<void(Rng)>;
+  using DivFun = function<vector<Rng>(Rng)>;
+  using MergFun = function<Rng(vector<Rng>)>;
+  using SeqFun = function<Rng(Rng)>;
+  using CondFun = function<bool(Rng)>;
   DivConq(DivFun div_fun, MergFun merg_fun, SeqFun seq_fun, CondFun cond_fun)
       : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun),
         cond_fun_(cond_fun) {}

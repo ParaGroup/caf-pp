@@ -1,8 +1,9 @@
 #pragma once
 
-#include "caf/all.hpp"
+#include <caf/all.hpp>
 
 #include "utils/ns_type.hpp"
+#include <range/v3/all.hpp>
 
 using namespace caf;
 using namespace std;
@@ -13,24 +14,16 @@ using namespace utils;
 
 using ok = atom_constant<caf::atom("ok")>;
 
-template <class Container, class Iterator>
+template <class Cnt, class Fnc>
 behavior map_static_worker_actor(event_based_actor *self,
-                                 function<void(Iterator, Iterator)> fun_) {
-  return {[=](ns_type<Container> &ns_c, size_t start, size_t end) {
+                                 Fnc fun_) {
+  return {[=](ns_type<Cnt> &ns_c, size_t start, size_t end) {
     // if (__verbose__)
     //   caf::aout(self) << "actor" << self->id() << "_ (" <<
     //   con_to_string(*ns_c)
     //                   << ") [" << start << ":" << end << "]" << endl;
-
-    Iterator it_start = ns_c->begin();
-    for (size_t i = 0; i < start; i++) {
-      ++it_start;
-    }
-    Iterator it_end(it_start);
-    for (size_t i = start; i < end; i++) {
-      ++it_end;
-    }
-    fun_(move(it_start), move(it_end));
+    auto r = ranges::views::slice(*ns_c, start, end);
+    fun_(r);
     return ok::value;
   }};
 }
@@ -38,20 +31,20 @@ behavior map_static_worker_actor(event_based_actor *self,
 struct map_state {
   vector<actor> worker;
 };
-template <class Container, class Iterator>
+template <class Cnt, class Fnc>
 behavior map_static_actor(stateful_actor<map_state> *self,
-                          function<void(Iterator, Iterator)> fun_, uint32_t nw_,
+                          Fnc fun_, uint32_t nw_,
                           caf::optional<actor> out_) {
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(
-        self->spawn(map_static_worker_actor<Container, Iterator>, fun_));
+        self->spawn(map_static_worker_actor<Cnt, Fnc>, fun_));
   }
 
-  return {[=](Container c) mutable {
+  return {[=](Cnt c) mutable {
     // if (__verbose__)
     //   caf::aout(self) << "map_static_actor_ (" << con_to_string(c) << ")" <<
     //   endl;
-    ns_type<Container> ns_c(move(c));
+    ns_type<Cnt> ns_c(move(c));
 
     size_t nv = ns_c->size();
     size_t chunk = nv / nw_;
@@ -61,7 +54,7 @@ behavior map_static_actor(stateful_actor<map_state> *self,
     auto n_res = make_shared<size_t>(nw_);
     auto update_cb = [=](ok) mutable {
       if (--(*n_res) == 0) {
-        Container c = ns_c.release();
+        Cnt c = ns_c.release();
         if (out_) {
           self->send(out_.value(), move(c));
           promis.deliver(0);
@@ -88,11 +81,11 @@ behavior map_static_actor(stateful_actor<map_state> *self,
 }
 
 atomic<size_t> *atomic_i;
-template <class Container, class Iterator>
+template <class Cnt, class Fnc>
 behavior map_dynamic_worker_actor(event_based_actor *self,
-                                  function<void(Iterator, Iterator)> fun_,
+                                  Fnc fun_,
                                   size_t partition_) {
-  return {[=](ns_type<Container> &ns_c) {
+  return {[=](ns_type<Cnt> &ns_c) {
     // if (__verbose__)
     //   caf::aout(self) << "actor" << self->id() << "_ (" <<
     //   con_to_string(*ns_c)
@@ -100,30 +93,28 @@ behavior map_dynamic_worker_actor(event_based_actor *self,
     size_t i;
     size_t size = ns_c->size();
     while ((i = atomic_i->fetch_add(partition_)) < size) {
-      Iterator it_start = ns_c->begin();
-      it_start += i;
-      auto it_end = it_start + partition_;
-      fun_(move(it_start), move(it_end));
+      auto r = ranges::views::slice(*ns_c, i, i + partition_);
+      fun_(r);
     }
     return ok::value;
   }};
 }
 
-template <class Container, class Iterator>
+template <class Cnt, class Fnc>
 behavior map_dynamic_actor(stateful_actor<map_state> *self,
-                           function<void(Iterator, Iterator)> fun_,
+                           Fnc fun_,
                            uint32_t nw_, size_t partition_,
                            caf::optional<actor> out_) {
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(self->spawn(
-        map_dynamic_worker_actor<Container, Iterator>, fun_, partition_));
+        map_dynamic_worker_actor<Cnt, Fnc>, fun_, partition_));
   }
 
-  return {[=](Container c) mutable {
+  return {[=](Cnt c) mutable {
     // if (__verbose__)
     //   caf::aout(self) << "map_static_actor_ (" << con_to_string(c) << ")" <<
     //   endl;
-    ns_type<Container> ns_c(move(c));
+    ns_type<Cnt> ns_c(move(c));
     atomic_i = new atomic<size_t>(0);
 
     auto promis = self->make_response_promise();
@@ -132,7 +123,7 @@ behavior map_dynamic_actor(stateful_actor<map_state> *self,
       self->request(w, caf::infinite, ns_c).then([=](ok) mutable {
         if (--(*n_res) == 0) {
           free(atomic_i);
-          Container c = ns_c.release();
+          Cnt c = ns_c.release();
           if (out_) {
             self->send(out_.value(), move(c));
           } else {

@@ -30,7 +30,7 @@ void caf_main(actor_system &sys, const config &cfg) {
 
   using Cont = vector<int64_t>;
   using I = Cont::iterator;
-  auto div = [](Range<I> &op) -> vector<Range<I>> {
+  auto div = [](auto &op) -> vector<MyRange<I>> {
     // divide the input
     auto start = op.begin();
     auto end = op.end();
@@ -56,18 +56,18 @@ void caf_main(actor_system &sys, const config &cfg) {
     }
     return {{start, j}, {j + 1, end}};
   };
-  auto merge = [](vector<Range<I>> &v_res) -> Range<I> {
+  auto merge = [](vector<MyRange<I>> &v_res) -> MyRange<I> {
     // merge the output
     return {v_res[0].begin(), v_res[1].end()};
   };
-  auto seq = [=](Range<I> &op) -> Range<I> {
+  auto seq = [=](MyRange<I> &op) -> MyRange<I> {
     // sequential version
     if (distance(op.begin(), op.end()) > 2) {
       std::sort(op.begin(), op.end());
     }
     return move(op);
   };
-  auto cond = [](Range<I> &op) -> bool {
+  auto cond = [](MyRange<I> &op) -> bool {
     // stop recursion and execute sequential
     return distance(op.begin(), op.end()) < 2;
   };

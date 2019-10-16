@@ -29,20 +29,19 @@ void caf_main(actor_system &sys, const config &cfg) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
   scoped_actor self{sys};
 
-  using Container = vector<int64_t>;
-  using Iterator = typename Container::iterator;
-  Map<Container> mapStatic(
-      [=](Iterator begin, Iterator end) {
-        for (auto it = begin; it != end; ++it) {
-          *it += 1;
+  using Cnt = vector<int64_t>;
+  Map<Cnt> mapStatic(
+      [](auto range) {
+        for (auto &el : range) {
+          el += 1;
         }
       },
       PartitionSched::static_(), 3);
 
-  Map<Container> mapDynamic(
-      [=](Iterator begin, Iterator end) {
-        for (auto it = begin; it != end; ++it) {
-          *it += 1;
+  Map<Cnt> mapDynamic(
+      [](auto range) {
+        for (auto &el : range) {
+          el += 1;
         }
       },
       PartitionSched::dynamic_{1}, 3);

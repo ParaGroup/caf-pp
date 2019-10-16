@@ -2,8 +2,6 @@
 
 #include "caf/all.hpp"
 
-using namespace caf;
-
 namespace caf_pp {
 namespace utils {
 
@@ -42,7 +40,7 @@ template <class Inspector, class T>
 typename Inspector::result_type inspect(Inspector &f, ns_type<T> &x) {
   //   if (__verbose__)
   //     cout << "  [DEBUG] ns_type inspector" << endl;
-  return f(meta::type_name("ns_type"), *x);
+  return f(caf::meta::type_name("ns_type"), *x);
 }
 } // namespace utils
 } // namespace caf_pp

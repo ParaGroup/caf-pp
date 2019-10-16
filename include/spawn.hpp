@@ -82,22 +82,25 @@ spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
 }
 
 // SPAWN MAP
-template <template <typename> typename P, typename T>
-typename std::enable_if<std::is_same<P<T>, Map<T>>::value,
+template <template <typename> typename P, typename Cnt>
+typename std::enable_if<std::is_same<P<Cnt>, Map<Cnt>>::value,
                         caf::optional<actor>>::type
-spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
+spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
               Runtime m) {
   cout << "[DEBUG] "
        << "inside Map spawn" << endl;
-  using Iter = typename T::iterator;
   using namespace PartitionSched;
+    // TODO: remove this
+    using Itr = typename Cnt::iterator;
+    using Rng = ranges::subrange<Itr>;
+    using Fnc = function<void(Rng)>;
   actor map;
   if (holds_alternative<static_>(p.sched_)) {
-    map = sys.spawn(map_static_actor<T, Iter>, p.map_fun_, p.replicas_, out);
+    map = sys.spawn(map_static_actor<Cnt, Fnc>, p.map_fun_, p.replicas_, out);
   }
   if (holds_alternative<dynamic_>(p.sched_)) {
     auto partition = get<dynamic_>(p.sched_).partition;
-    map = sys.spawn(map_dynamic_actor<T, Iter>, p.map_fun_, p.replicas_,
+    map = sys.spawn(map_dynamic_actor<Cnt, Fnc>, p.map_fun_, p.replicas_,
                     partition, out);
   }
   p.instance_ = caf::optional<actor>(map);
@@ -105,15 +108,14 @@ spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
 }
 
 // SPAWN DIVCONQ
-template <template <class> class P, typename C>
-typename std::enable_if<std::is_same<P<C>, DivConq<C>>::value,
+template <template <class> class P, typename Cnt>
+typename std::enable_if<std::is_same<P<Cnt>, DivConq<Cnt>>::value,
                         caf::optional<actor>>::type
-spawn_pattern(actor_system &sys, P<C> &p, const caf::optional<actor> &out,
+spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
               Runtime m) {
   cout << "[DEBUG] "
        << "inside DIVCONQ spawn" << endl;
-  using I = typename C::iterator;
-  auto dac = sys.spawn(dac_master_fun<C, I>, p, out);
+  auto dac = sys.spawn(dac_master_fun<Cnt>, p, out);
   p.instance_ = caf::optional<actor>(dac);
   return dac;
 }
