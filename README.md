@@ -1,6 +1,6 @@
 # CAF-PP: C++ Actor Framework - Parallel Patterns
 
-```Parallel patterns library for the C++ Actor Framework (CAF)```
+> Parallel pattern library for the C++ Actor Framework (CAF)
 
 This repository is an early stage implement of efficient and optimized parallel patterns for the Actor Model.
 The library especially targets multi-cores and it exploits shared-memory to efficient implement Parallel patterns.
