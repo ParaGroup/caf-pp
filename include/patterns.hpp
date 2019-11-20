@@ -91,7 +91,6 @@ template <typename T> struct Farm : public Pattern {
 
 template <class... T> struct Pipeline : public Pattern {
   Pipeline(T &... stages) : stages_(stages...) {
-    // std::cout << std::is_same<T, Pattern>::value <<  "\n";
     static_assert(conjunction_v<is_base_of<Pattern, T>...>,
                   "Type parameter of this class must derive from Pattern");
   }

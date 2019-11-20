@@ -12,9 +12,9 @@ using namespace std;
 using namespace caf;
 using namespace caf_pp;
 
-class security : public pp_actor {
+class storage : public pp_actor {
 public:
-  security(actor_config &cfg, caf::optional<actor> next) : pp_actor(cfg, next) {
+  storage(actor_config &cfg, caf::optional<actor> next) : pp_actor(cfg, next) {
     // nop
   }
 
@@ -22,11 +22,11 @@ public:
     return {[=](string key, tuple<int, int, int> values) {
       aout(this) << "\tworker_" << id() << "   key=" << key << endl;
 
-      auto search = instruments_.find(key);
-      if (search == instruments_.end()) {
-        instruments_.emplace(make_pair(key, make_tuple(0, 0, 0)));
+      auto search = elements_.find(key);
+      if (search == elements_.end()) {
+        elements_.emplace(make_pair(key, make_tuple(0, 0, 0)));
       }
-      auto &tuple = instruments_[key];
+      auto &tuple = elements_[key];
       auto &t1 = get<0>(tuple);
       auto &t2 = get<1>(tuple);
       auto &t3 = get<2>(tuple);
@@ -45,7 +45,7 @@ private:
   void update0(int &t, const int &in) { t += in; }
   void update1(int &t, const int &in) { t += in; }
   void update2(int &t, const int &in) { t += in; }
-  unordered_map<string, tuple<int, int, int>> instruments_;
+  unordered_map<string, tuple<int, int, int>> elements_;
 };
 
 class dispatcher : public pp_actor {
@@ -83,8 +83,8 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](string &instrument, string &sigma, int &value) {
-      aout(this) << "\tclient_" << id() << "   instrument=" << instrument
+    return {[=](string &element, string &sigma, int &value) {
+      aout(this) << "\tclient_" << id() << "   element=" << element
                  << "   sigma=" + sigma << "   value=" << value << endl;
     }};
   }
@@ -97,20 +97,18 @@ struct config : actor_system_config {
 void caf_main(actor_system &sys, const config &cfg) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
 
-  Seq<security> security_seq;
+  Seq<storage> storage_seq;
+  Farm storage_farm(storage_seq, by_key<string>([](type_erased_tuple &t) {
+                      return t.get_as<string>(0);
+                    }),
+                    3);
   Seq<dispatcher> dispatcher_seq(
-      [](actor a) { cout << "[DEBUG] init callback call" << endl; });
-  Farm security_farm(security_seq, by_key<string>([](type_erased_tuple &t) {
-                       return t.get_as<string>(0);
-                     }),
-                     3);
-
+      [](actor _a) { cout << "[DEBUG] init callback call" << endl; });
   Farm dispatcher_farm(dispatcher_seq, by_key<string>([](type_erased_tuple &t) {
                          return t.get_as<string>(0) + t.get_as<string>(1);
                        }),
                        3);
-
-  Pipeline pipe(security_farm, dispatcher_farm);
+  Pipeline pipe(storage_farm, dispatcher_farm);
 
   auto first =
       spawn_pattern(sys, pipe, caf::optional<actor>(), Runtime::threads)
