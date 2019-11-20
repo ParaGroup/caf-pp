@@ -90,10 +90,10 @@ spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
   cout << "[DEBUG] "
        << "inside Map spawn" << endl;
   using namespace PartitionSched;
-    // TODO: remove this
-    using Itr = typename Cnt::iterator;
-    using Rng = ranges::subrange<Itr>;
-    using Fnc = function<void(Rng)>;
+  // TODO: remove this
+  using Itr = typename Cnt::iterator;
+  using Rng = ranges::subrange<Itr>;
+  using Fnc = function<void(Rng)>;
   actor map;
   if (holds_alternative<static_>(p.sched_)) {
     map = sys.spawn(map_static_actor<Cnt, Fnc>, p.map_fun_, p.replicas_, out);
