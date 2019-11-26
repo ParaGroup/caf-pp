@@ -15,7 +15,7 @@ namespace caf_pp {
 
 using namespace pp_impl;
 
-enum Runtime { threads, actors };
+// enum Runtime { threads, actors };
 
 template <class T>
 caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
@@ -96,15 +96,36 @@ spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
   using Fnc = function<void(Rng)>;
   actor map;
   if (holds_alternative<static_>(p.sched_)) {
-    map = sys.spawn(map_static_actor<Cnt, Fnc>, p.map_fun_, p.replicas_, out);
-  }
-  if (holds_alternative<dynamic_>(p.sched_)) {
+    if (holds_alternative<Replicas::auto_>(p.replicas_)) {
+      map = spawn_(sys, p.runtime_, map_static_actor<Cnt, Fnc>, p.map_fun_,
+                   uint32_t{4}, out);
+    } else {
+      auto replicas = get<uint32_t>(p.replicas_);
+      map = spawn_(sys, p.runtime_, map_static_actor<Cnt, Fnc>, p.map_fun_,
+                   replicas, out);
+    }
+  } else {
     auto partition = get<dynamic_>(p.sched_).partition;
-    map = sys.spawn(map_dynamic_actor<Cnt, Fnc>, p.map_fun_, p.replicas_,
-                    partition, out);
+    if (holds_alternative<Replicas::auto_>(p.replicas_)) {
+      map = spawn_(sys, p.runtime_, map_dynamic_actor<Cnt, Fnc>, p.map_fun_,
+                   uint32_t{4}, partition, out);
+    } else {
+      auto replicas = get<uint32_t>(p.replicas_);
+      map = spawn_(sys, p.runtime_, map_dynamic_actor<Cnt, Fnc>, p.map_fun_,
+                   replicas, partition, out);
+    }
   }
   p.instance_ = caf::optional<actor>(map);
   return map;
+} // namespace caf_pp
+
+template <class... Args>
+actor spawn_(actor_system &sys, Runtime runtime, Args... args) {
+  if (runtime == Runtime::actors) {
+    return sys.spawn(std::forward<Args>(args)...);
+  } else {
+    return sys.spawn<caf::detached>(std::forward<Args>(args)...);
+  }
 }
 
 // SPAWN DIVCONQ

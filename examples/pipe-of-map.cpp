@@ -30,21 +30,21 @@ void caf_main(actor_system &sys, const config &cfg) {
   scoped_actor self{sys};
 
   using Cnt = vector<int64_t>;
-  Map<Cnt> mapStatic(
-      [](auto range) {
-        for (auto &el : range) {
-          el += 1;
-        }
-      },
-      PartitionSched::static_(), 3);
+  auto mapStatic = Map<Cnt>([](auto range) {
+                     for (auto &el : range) {
+                       el += 1;
+                     }
+                   })
+                       .scheduler(PartitionSched::static_())
+                       .replicas(3);
 
-  Map<Cnt> mapDynamic(
-      [](auto range) {
-        for (auto &el : range) {
-          el += 1;
-        }
-      },
-      PartitionSched::dynamic_{1}, 3);
+  auto mapDynamic = Map<Cnt>([](auto range) {
+                      for (auto &el : range) {
+                        el += 1;
+                      }
+                    })
+                        .scheduler(PartitionSched::dynamic_{1})
+                        .replicas(3);
 
   Pipeline pipe(mapStatic, mapDynamic);
   auto first =

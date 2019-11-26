@@ -13,6 +13,7 @@ using namespace caf;
 using namespace std;
 
 namespace caf_pp {
+enum Runtime { threads, actors };
 
 struct Pattern {};
 
@@ -41,6 +42,11 @@ struct dynamic_ {
   size_t partition = 1;
 };
 } // namespace PartitionSched
+
+namespace Replicas {
+struct auto_ {};
+} // namespace Replicas
+
 template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Itr = typename Cnt::iterator;
@@ -48,12 +54,28 @@ template <typename Cnt> struct Map : public Pattern {
   using Fnc = function<void(Rng)>;
   using PartitionVar =
       std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
-  Map(Fnc map_fun, PartitionVar sched, uint64_t replicas)
-      : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
+  using ReplicasVar = std::variant<Replicas::auto_, uint32_t>;
+  Map(Fnc map_fun)
+      : map_fun_(map_fun), sched_(PartitionSched::static_()),
+        replicas_(Replicas::auto_()), runtime_(Runtime::actors) {}
+
+  Map<Cnt>& scheduler(PartitionVar sched){
+    sched_ = sched;
+    return *this;
+  };
+  Map<Cnt>& replicas(ReplicasVar replicas){
+    replicas_ = replicas;
+    return *this;
+  };
+  Map<Cnt>& runtime(Runtime runtime) {
+    runtime_ = runtime_;
+    return *this;
+  };
 
   Fnc map_fun_;
   PartitionVar sched_;
-  uint64_t replicas_;
+  ReplicasVar replicas_;
+  Runtime runtime_;
   caf::optional<actor> instance_;
 };
 
