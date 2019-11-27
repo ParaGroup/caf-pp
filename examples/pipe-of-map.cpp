@@ -47,9 +47,7 @@ void caf_main(actor_system &sys, const config &cfg) {
                         .replicas(3);
 
   Pipeline pipe(mapStatic, mapDynamic);
-  auto first =
-      spawn_pattern(sys, pipe, actor_cast<actor>(self), Runtime::actors)
-          .value();
+  auto first = spawn_pattern(sys, pipe, actor_cast<actor>(self)).value();
 
   auto vec = vector<int64_t>();
   for (auto i = 10; i > 0; --i) {
