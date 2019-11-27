@@ -36,25 +36,18 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 # Targets
-add_library(caf_pp src/patterns.cpp
-                   src/policy.cpp
-                   src/spawn.cpp
-                   src/pp_actor.cpp
-                   src/utils/ns_type.cpp
-                   src/utils/spawn_actor.cpp
-                   src/pp_impl/map.cpp
-                   src/pp_impl/dac.cpp)
-target_include_directories(caf_pp PUBLIC ./include ./src ${CAF_INCLUDE} ${RANGE_INCLUDE})
+add_library(caf_pp src/caf-pp/all.cpp)
+target_include_directories(caf_pp PUBLIC ./include/caf-pp ./src/caf-pp ${CAF_INCLUDE} ${RANGE_INCLUDE})
 target_link_libraries(caf_pp ${CAF_LIB} pthread)
 
 add_executable (pipe-of-farm examples/pipe-of-farm.cpp)
-target_include_directories(pipe-of-farm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} libcaf_pp)
+target_include_directories(pipe-of-farm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./include)
 target_link_libraries(pipe-of-farm caf_pp ${CAF_LIB})
 
 add_executable (pipe-of-map examples/pipe-of-map.cpp)
-target_include_directories(pipe-of-map PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} libcaf_pp)
+target_include_directories(pipe-of-map PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./include)
 target_link_libraries(pipe-of-map caf_pp ${CAF_LIB})
 
 add_executable (divide-conquer examples/divide-conquer.cpp)
-target_include_directories(divide-conquer PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} libcaf_pp)
+target_include_directories(divide-conquer PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./include)
 target_link_libraries(divide-conquer caf_pp ${CAF_LIB})

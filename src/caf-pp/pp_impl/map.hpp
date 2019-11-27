@@ -1,12 +1,10 @@
 #pragma once
 
-#include <caf/all.hpp>
-
 #include "utils/ns_type.hpp"
-#include <range/v3/all.hpp>
 
 using namespace caf;
 using namespace std;
+
 namespace caf_pp {
 namespace pp_impl {
 

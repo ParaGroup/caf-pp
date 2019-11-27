@@ -1,7 +1,4 @@
 #pragma once
-#include <cassert>
-
-#include "caf/all.hpp"
 
 #include "patterns.hpp"
 #include "utils/ns_type.hpp"

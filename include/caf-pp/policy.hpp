@@ -1,7 +1,5 @@
 #pragma once
 
-#include "caf/all.hpp"
-
 using namespace caf;
 using namespace std;
 

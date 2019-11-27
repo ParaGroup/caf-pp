@@ -1,11 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "caf/all.hpp"
-
-#include "patterns.hpp"
-#include "policy.hpp"
-#include "spawn.hpp"
+#include "caf-pp/all.hpp"
 
 using namespace std;
 using namespace caf;

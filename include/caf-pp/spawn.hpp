@@ -1,7 +1,5 @@
 #pragma once
 
-#include "caf/all.hpp"
-
 #include "patterns.hpp"
 #include "pp_impl/dac.hpp"
 #include "pp_impl/map.hpp"
