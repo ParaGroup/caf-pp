@@ -1,5 +1,7 @@
 #pragma once
 
+#include <caf/all.hpp>
+
 #include "patterns.hpp"
 
 using namespace caf;

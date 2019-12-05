@@ -1,6 +1,8 @@
 #pragma once
-
 #include <iostream>
+
+#include <caf/all.hpp>
+
 
 using namespace caf;
 using namespace std;
