@@ -77,6 +77,33 @@ template <typename Cnt> struct Map : public Pattern {
   caf::optional<actor> instance_;
 };
 
+template <class CntIn, class CntOut> struct Map2 : public Pattern {
+  // TODO: check that Cont is a container
+  using In = typename CntIn::value_type;
+  using Out = typename CntOut::value_type;
+  using Fnc = function<Out(const In&)>;
+  Map2(Fnc map_fun) : map_fun_(map_fun), sched_(PartitionSched::static_()) {}
+
+  Map2<CntIn, CntOut> &scheduler(PartitionVar sched) {
+    sched_ = sched;
+    return *this;
+  };
+  Map2<CntIn, CntOut> &replicas(uint32_t replicas) {
+    replicas_ = replicas;
+    return *this;
+  };
+  Map2<CntIn, CntOut> &runtime(Runtime runtime) {
+    runtime_ = runtime_;
+    return *this;
+  };
+
+  Fnc map_fun_;
+  PartitionVar sched_;
+  caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
+  caf::optional<actor> instance_;
+};
+
 template <typename Cnt> struct DivConq : public Pattern {
   // TODO: check that Cont is a container
   using Itr = typename Cnt::iterator;

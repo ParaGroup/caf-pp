@@ -5,6 +5,7 @@
 #include "patterns.hpp"
 #include "pp_impl/dac.hpp"
 #include "pp_impl/map.hpp"
+#include "pp_impl/map2.hpp"
 #include "utils/spawn_actor.hpp"
 
 using namespace caf;
@@ -84,10 +85,7 @@ spawn_pattern_with(actor_system &sys, P<Cnt> &p,
   cout << "[DEBUG] "
        << "inside Map spawn" << endl;
   using namespace PartitionSched;
-  // TODO: remove this
-  using Itr = typename Cnt::iterator;
-  using Rng = ranges::subrange<Itr>;
-  using Fnc = function<void(Rng)>;
+  using Fnc = typename Map<Cnt>::Fnc;
   actor map;
   auto replicas = p.replicas_ ? p.replicas_.value() : 4;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
@@ -101,7 +99,32 @@ spawn_pattern_with(actor_system &sys, P<Cnt> &p,
   }
   p.instance_ = caf::optional<actor>(map);
   return map;
-} // namespace caf_pp
+}
+
+// SPAWN MAP2
+template <template <typename, typename> typename P, typename CntIn, typename CntOut>
+typename std::enable_if<std::is_same<P<CntIn,CntOut>, Map2<CntIn,CntOut>>::value,
+                        caf::optional<actor>>::type
+spawn_pattern_with(actor_system &sys, P<CntIn,CntOut> &p,
+                   const caf::optional<actor> &out, Runtime m) {
+  cout << "[DEBUG] "
+       << "inside Map spawn" << endl;
+  using namespace PartitionSched;
+  using Fnc = typename Map2<CntIn,CntOut>::Fnc;
+  actor map;
+  auto replicas = p.replicas_ ? p.replicas_.value() : 4;
+  auto runtime = p.runtime_ ? p.runtime_.value() : m;
+  if (holds_alternative<static_>(p.sched_)) {
+    map = spawn_actor(sys, runtime, map2_static_actor<CntIn, CntOut, Fnc>, p.map_fun_,
+                      replicas, out);
+  } else {
+    auto partition = get<dynamic_>(p.sched_).partition;
+    map = spawn_actor(sys, runtime, map2_dynamic_actor<CntIn, CntOut, Fnc>, p.map_fun_,
+                      replicas, partition, out);
+  }
+  p.instance_ = caf::optional<actor>(map);
+  return map;
+}
 
 // SPAWN DIVCONQ
 template <template <class> class P, typename Cnt>
