@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(parco19_exp VERSION 0.1.0)
+project(caf-pp VERSION 0.1.0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++17")
 
@@ -15,19 +15,36 @@ endif()
 
 # find CAF
 find_library(CAF_LIB caf_core_static)
-find_path(CAF_INCLUDE caf)
+find_path(CAF_INCLUDE caf/all.hpp)
 if(NOT CAF_LIB OR NOT CAF_INCLUDE)
   message(FATAL_ERROR "CAF library not found")
 endif()
 find_library(PTHREAD pthread)
 
-find_path(RANGE_INCLUDE range/v3/all.hpp)
-if(NOT RANGE_INCLUDE)
+# Find/Download Range-v3
 # reference: https://foonathan.net/2016/07/cmake-dependency-handling/
-    message("Download 'range-v3'")
-    execute_process(COMMAND git submodule update --init -- external/range-v3
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    set(RANGE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3/include)
+find_path(RANGE_INCLUDE range/v3/all.hpp)
+if(RANGE_INCLUDE)
+  add_library(range INTERFACE)
+  target_include_directories(range INTERFACE ${RANGE_INCLUDE})
+else()
+  message("Unable to find 'range-v3', will be downloaded...")
+  execute_process(COMMAND git submodule update --init -- external/range-v3
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  # set RANGE_INCLUDE properly
+  set(RANGE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3/include)
+
+  # also install it
+  install(DIRECTORY ${RANGE_INCLUDE}/range DESTINATION include)
+
+  # for convenience setup a target
+  add_library(range INTERFACE)
+  target_include_directories(range INTERFACE
+                            $<BUILD_INTERFACE:${RANGE_INCLUDE}>
+                            $<INSTALL_INTERFACE:include/range>)
+  
+  # need to export target as well
+  install(TARGETS range EXPORT my_export_set DESTINATION include)
 endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
@@ -57,3 +74,9 @@ target_link_libraries(pipe-of-map caf_pp ${CAF_LIB})
 add_executable (divide-conquer examples/divide-conquer.cpp)
 target_include_directories(divide-conquer PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} libcaf_pp)
 target_link_libraries(divide-conquer caf_pp ${CAF_LIB})
+
+# Install Library
+install(TARGETS caf_pp DESTINATION lib)
+install(DIRECTORY src/
+        DESTINATION include/caf-pp
+        FILES_MATCHING PATTERN "*.hpp")

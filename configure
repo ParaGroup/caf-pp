@@ -3,8 +3,8 @@
 
 set -e # exit at the first error
 
-dirname_0=`dirname $0`
-sourcedir=`cd $dirname_0 && pwd`
+dirname_0=$(dirname "$0")
+sourcedir=$(cd "$dirname_0" && pwd)
 
 usage="\
 Usage: $0 [OPTION]...
@@ -13,12 +13,11 @@ Usage: $0 [OPTION]...
     --release            set release flags (default:false)
     --cxx-path=PATH      CXX compiler path
     --prefix-path=PATH   additional path for libraries
+    --install-path=PATH  set the installation path
 "
 
 # default values
-RELEASE="no"
-PREFIX_PATH=""
-CXX_PATH=""
+RELEASE=no
 
 for i in "$@"
 do
@@ -31,15 +30,18 @@ case $i in
       RELEASE=yes
       shift # past argument=value
     ;;
-    --prefix-path=*)
-      PREFIX_PATH="${i#*=}"
-      shift # past argument=value
-    ;;
     --cxx-path=*)
       CXX_PATH="${i#*=}"
       shift # past argument=value
     ;;
-    
+    --prefix-path=*)
+      PREFIX_PATH="${i#*=}"
+      shift # past argument=value
+    ;;
+    --install-path=*)
+      INSTALL_PATH="${i#*=}"
+      shift # past argument=value
+    ;;
     *)
       echo "error: unknown option";echo
       echo "$usage"
@@ -48,11 +50,6 @@ case $i in
 esac
 done
 
-# # echo configuration
-# echo "RELEASE      = ${RELEASE}"
-# echo "PREFIX_PATH  = ${PREFIX_PATH}"
-# echo "CXX_PATH     = ${CXX_PATH}"
-
 CMAKE_ARGS=""
 if [ $RELEASE = "yes" ] ; then
   CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_BUILD_TYPE=Release"
@@ -60,12 +57,16 @@ else
   CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_BUILD_TYPE=Debug"
 fi
 
-if [ "${PREFIX_PATH}" != "" ] ; then
+if [ "$CXX_PATH" != "" ] ; then
+  CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_CXX_COMPILER=$CXX_PATH"
+fi
+
+if [ "$PREFIX_PATH" != "" ] ; then
   CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_PREFIX_PATH=$PREFIX_PATH"
 fi
 
-if [ "$CXX_PATH" != "" ] ; then
-  CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_CXX_COMPILER=$CXX_PATH"
+if [ "$INSTALL_PATH" != "" ] ; then
+  CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_INSTALL_PREFIX=$INSTALL_PATH"
 fi
 
 # call cmake
