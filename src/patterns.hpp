@@ -1,10 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <typeinfo>
 #include <variant>
 
-#include "caf/all.hpp"
+#include <caf/all.hpp>
 #include <range/v3/all.hpp>
 
 #include "pp_actor.hpp"
@@ -13,6 +12,7 @@ using namespace caf;
 using namespace std;
 
 namespace caf_pp {
+enum Runtime { threads, actors };
 
 struct Pattern {};
 
@@ -31,6 +31,12 @@ template <typename Actor> struct Seq : public Pattern {
   // In order to implement the forwarding parameters features it is probabily
   // necessary to implement a method 'make_seq' like the std::tuple class
 
+  Seq<Actor> &runtime(Runtime runtime) {
+    runtime_ = runtime_;
+    return *this;
+  };
+
+  caf::optional<Runtime> runtime_;
   caf::optional<SpawnCb> spawn_cb_;
   caf::optional<actor> instance_;
 };
@@ -41,19 +47,33 @@ struct dynamic_ {
   size_t partition = 1;
 };
 } // namespace PartitionSched
+using PartitionVar =
+    std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
+
 template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Itr = typename Cnt::iterator;
   using Rng = ranges::subrange<Itr>;
   using Fnc = function<void(Rng)>;
-  using PartitionVar =
-      std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
-  Map(Fnc map_fun, PartitionVar sched, uint64_t replicas)
-      : map_fun_(map_fun), sched_(sched), replicas_(replicas) {}
+  Map(Fnc map_fun) : map_fun_(map_fun), sched_(PartitionSched::static_()) {}
+
+  Map<Cnt> &scheduler(PartitionVar sched) {
+    sched_ = sched;
+    return *this;
+  };
+  Map<Cnt> &replicas(uint32_t replicas) {
+    replicas_ = replicas;
+    return *this;
+  };
+  Map<Cnt> &runtime(Runtime runtime) {
+    runtime_ = runtime_;
+    return *this;
+  };
 
   Fnc map_fun_;
   PartitionVar sched_;
-  uint64_t replicas_;
+  caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
   caf::optional<actor> instance_;
 };
 
@@ -77,15 +97,30 @@ template <typename Cnt> struct DivConq : public Pattern {
 };
 
 template <typename T> struct Farm : public Pattern {
-  Farm(T &stage, actor_pool::policy policy, uint64_t replicas)
-      : stage_(stage), policy_(policy), replicas_(replicas) {
+  Farm(T &stage) : stage_(stage), policy_(actor_pool::round_robin()) {
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
 
+  Farm<T> &policy(actor_pool::policy policy) {
+    policy_ = policy;
+    return *this;
+  };
+
+  Farm<T> &replicas(uint32_t replicas) {
+    replicas_ = replicas;
+    return *this;
+  };
+
+  Farm<T> &runtime(Runtime runtime) {
+    runtime_ = runtime_;
+    return *this;
+  };
+
   T &stage_;
   actor_pool::policy policy_;
-  uint64_t replicas_;
+  caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
   caf::optional<actor> instance_;
 };
 

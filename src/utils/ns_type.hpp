@@ -1,6 +1,6 @@
 #pragma once
 
-#include "caf/all.hpp"
+#include <caf/all.hpp>
 
 namespace caf_pp {
 namespace utils {
