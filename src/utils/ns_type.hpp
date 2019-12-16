@@ -6,20 +6,10 @@ namespace caf_pp {
 namespace utils {
 
 template <class T> struct ns_type {
-  ns_type(T &&obj) {
-    ptr = new T(move(obj));
-    // if (__verbose__)
-    //   cout << "  [DEBUG] constructor" << endl;
-  };
-  ns_type(const ns_type &other)
-      : ptr{other.ptr} {
-            // if (__verbose__)
-            //   cout << "  [DEBUG] copy constructor" << endl;
-        };
-  ns_type(ns_type &&other) : ptr{other.ptr} {
-    // if (__verbose__)
-    //   cout << "  [DEBUG] move constructor" << endl;
-  }
+  ns_type(T &&obj) { ptr = new T(move(obj)); };
+  ns_type(const ns_type &other) : ptr{other.ptr} {};
+  ns_type(ns_type &&other) : ptr{other.ptr} {}
+
   ns_type &operator=(const ns_type &other) = delete;
 
   T &operator*() { return *ptr; }
@@ -38,9 +28,8 @@ private:
 
 template <class Inspector, class T>
 typename Inspector::result_type inspect(Inspector &f, ns_type<T> &x) {
-  //   if (__verbose__)
-  //     cout << "  [DEBUG] ns_type inspector" << endl;
-  return f(caf::meta::type_name("ns_type"), *x);
+  return f(caf::meta::type_name("ns_type"));
 }
+
 } // namespace utils
 } // namespace caf_pp

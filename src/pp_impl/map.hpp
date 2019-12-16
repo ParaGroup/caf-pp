@@ -4,6 +4,7 @@
 #include <range/v3/all.hpp>
 
 #include "utils/ns_type.hpp"
+#include "utils/ns_wrapper.hpp"
 
 using namespace caf;
 using namespace std;
@@ -17,13 +18,8 @@ using ok = atom_constant<caf::atom("ok")>;
 
 template <class Cnt, class Fnc>
 behavior map_static_worker_actor(event_based_actor *self, Fnc fun_) {
-  return {[=](ns_type<Cnt> &ns_c, size_t start, size_t end) {
-    // if (__verbose__)
-    //   caf::aout(self) << "actor" << self->id() << "_ (" <<
-    //   con_to_string(*ns_c)
-    //                   << ") [" << start << ":" << end << "]" << endl;
-    auto r = ranges::views::slice(*ns_c, start, end);
-    fun_(r);
+  return {[=](ns_wrapper<ranges::subrange<typename Cnt::iterator>> ns_r) {
+    fun_(*ns_r);
     return ok::value;
   }};
 }
@@ -40,9 +36,6 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
   }
 
   return {[=](Cnt c) mutable {
-    // if (__verbose__)
-    //   caf::aout(self) << "map_static_actor_ (" << con_to_string(c) << ")" <<
-    //   endl;
     ns_type<Cnt> ns_c(move(c));
 
     size_t nv = ns_c->size();
@@ -71,7 +64,9 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
         plus--;
       }
       size_t pend = p + len;
-      self->request(self->state.worker[iw], caf::infinite, ns_c, p, pend)
+      auto r = *ns_c | ranges::views::slice(p, pend);
+      ns_wrapper ns_r (move(r));
+      self->request(self->state.worker[iw], caf::infinite, move(ns_r))
           .then(update_cb);
       p = pend;
     }

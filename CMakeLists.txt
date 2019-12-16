@@ -57,6 +57,7 @@ add_library(caf_pp src/pp_impl/dac.cpp
                    src/pp_impl/map.cpp
                    src/pp_impl/map2.cpp
                    src/utils/ns_type.cpp
+                   src/utils/ns_wrapper.cpp
                    src/utils/spawn_actor.cpp
                    src/patterns.cpp
                    src/policy.cpp
