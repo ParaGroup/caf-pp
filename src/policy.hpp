@@ -21,7 +21,7 @@ template <class Key, class GetKey, class Router> struct by_key_policy {
     size_t hashcode = hf_(key);
     size_t idx = rf_(hashcode, vec.size());
     CAF_ASSERT(idx > 0 && idx < vec.size());
-    cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << endl;
+    // cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << endl;
     actor selected = vec[idx];
     guard.unlock();
     selected->enqueue(std::move(ptr), host);
