@@ -3,8 +3,8 @@
 #include <caf/all.hpp>
 #include <range/v3/all.hpp>
 
-#include "patterns.hpp"
-#include "utils/ns_type.hpp"
+#include "../patterns.hpp"
+#include "../utils/ns_type.hpp"
 
 using namespace caf;
 using namespace std;

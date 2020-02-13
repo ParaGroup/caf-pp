@@ -35,13 +35,13 @@ else()
   set(RANGE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3/include)
 
   # also install it
-  install(DIRECTORY ${RANGE_INCLUDE}/range DESTINATION include)
+  install(DIRECTORY ${RANGE_INCLUDE} DESTINATION .)
 
   # for convenience setup a target
   add_library(range INTERFACE)
   target_include_directories(range INTERFACE
                             $<BUILD_INTERFACE:${RANGE_INCLUDE}>
-                            $<INSTALL_INTERFACE:include/range>)
+                            $<INSTALL_INTERFACE:include>)
   
   # need to export target as well
   install(TARGETS range EXPORT my_export_set DESTINATION include)
