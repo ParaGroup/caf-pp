@@ -67,7 +67,7 @@ void caf_main(actor_system &sys, const config &cfg) {
     return op.size() < 2;
   };
   DivConq<Cnt> dac(div, merge, seq, cond);
-  auto handle = spawn_pattern(sys, dac, caf::optional<actor>()).value();
+  auto handle = spawn_pattern(sys, dac).value();
 
   vector<int64_t> vec{3, 4, 1, 7, 8, 5, 2};
   aout(self) << "main_ (" << con_to_string(vec) << ")" << endl;

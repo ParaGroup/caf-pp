@@ -32,7 +32,7 @@ template <typename Actor> struct Seq : public Pattern {
   // necessary to implement a method 'make_seq' like the std::tuple class
 
   Seq<Actor> &runtime(Runtime runtime) {
-    runtime_ = runtime_;
+    runtime_ = runtime;
     return *this;
   };
 
@@ -66,7 +66,7 @@ template <typename Cnt> struct Map : public Pattern {
     return *this;
   };
   Map<Cnt> &runtime(Runtime runtime) {
-    runtime_ = runtime_;
+    runtime_ = runtime;
     return *this;
   };
 
@@ -93,7 +93,7 @@ template <class CntIn, class CntOut> struct Map2 : public Pattern {
     return *this;
   };
   Map2<CntIn, CntOut> &runtime(Runtime runtime) {
-    runtime_ = runtime_;
+    runtime_ = runtime;
     return *this;
   };
 
@@ -140,13 +140,36 @@ template <typename T> struct Farm : public Pattern {
   };
 
   Farm<T> &runtime(Runtime runtime) {
-    runtime_ = runtime_;
+    runtime_ = runtime;
     return *this;
   };
 
   T &stage_;
   actor_pool::policy policy_;
   caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
+  caf::optional<actor> instance_;
+};
+
+template <class... T> struct FarmRouter : public Pattern {
+  FarmRouter(T &... stages) : stages_(stages...), policy_(actor_pool::round_robin()) {
+    static_assert(conjunction_v<is_base_of<Pattern, T>...>,
+                  "Type parameter of this class must derive from Pattern");
+  }
+
+  FarmRouter &policy(actor_pool::policy policy) {
+    policy_ = policy;
+    return *this;
+  };
+
+  FarmRouter &runtime(Runtime runtime) {
+    runtime_ = runtime;
+    return *this;
+  };
+
+  // vector<Pattern> stage_;
+  tuple<T &...> stages_;
+  actor_pool::policy policy_;
   caf::optional<Runtime> runtime_;
   caf::optional<actor> instance_;
 };

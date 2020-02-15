@@ -78,6 +78,10 @@ add_executable (divide-conquer examples/divide-conquer.cpp)
 target_include_directories(divide-conquer PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
 target_link_libraries(divide-conquer caf_pp ${CAF_LIB})
 
+add_executable (routerfarm examples/routerfarm.cpp)
+target_include_directories(routerfarm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_link_libraries(routerfarm caf_pp ${CAF_LIB})
+
 # Install Library
 install(TARGETS caf_pp DESTINATION lib)
 install(DIRECTORY src/

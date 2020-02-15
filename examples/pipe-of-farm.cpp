@@ -109,7 +109,7 @@ void caf_main(actor_system &sys, const config &cfg) {
                              .runtime(Runtime::actors);
   Pipeline pipe(storage_farm, dispatcher_farm);
 
-  auto first = spawn_pattern(sys, pipe, caf::optional<actor>()).value();
+  auto first = spawn_pattern(sys, pipe).value();
 
   // subscribe 2 clients
   auto c1 = sys.spawn<client>();
