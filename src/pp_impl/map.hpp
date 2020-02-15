@@ -81,7 +81,8 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
 
 template <class Cnt, class Fnc>
 behavior map_dynamic_worker_actor(event_based_actor *self, Fnc fun_,
-                                  size_t partition_, shared_ptr<atomic<size_t>> atomic_i_) {
+                                  size_t partition_,
+                                  shared_ptr<atomic<size_t>> atomic_i_) {
   return {[=](ns_type<Cnt> &ns_c) {
     size_t i;
     size_t size = ns_c->size();
@@ -103,8 +104,9 @@ behavior map_dynamic_actor(stateful_actor<map_dynamic_state> *self, Fnc fun_,
                            caf::optional<actor> out_) {
   self->state.atomic_i = make_shared<atomic<size_t>>(0);
   for (auto i = 0u; i < nw_; i++) {
-    self->state.worker.push_back(
-        self->spawn(map_dynamic_worker_actor<Cnt, Fnc>, fun_, partition_, self->state.atomic_i));
+    self->state.worker.push_back(self->spawn(map_dynamic_worker_actor<Cnt, Fnc>,
+                                             fun_, partition_,
+                                             self->state.atomic_i));
   }
 
   return {[=](Cnt c) mutable {

@@ -17,22 +17,23 @@ using namespace pp_impl;
 using namespace utils;
 
 template <class T>
-caf::optional<actor> spawn_pattern(actor_system &sys, T &p,
-                                   const caf::optional<actor> &out=caf::optional<actor>()) {
+caf::optional<actor>
+spawn_pattern(actor_system &sys, T &p,
+              const caf::optional<actor> &out = caf::optional<actor>()) {
   return _spawn_pattern(sys, p, out, Runtime::actors);
 }
 
 template <class T>
-caf::optional<actor> spawn_pattern_with(actor_system &sys, T &p,
-                                        Runtime m,
-                                        const caf::optional<actor> &out=caf::optional<actor>()) {
-    return _spawn_pattern(sys, p, out, m);
+caf::optional<actor>
+spawn_pattern_with(actor_system &sys, T &p, Runtime m,
+                   const caf::optional<actor> &out = caf::optional<actor>()) {
+  return _spawn_pattern(sys, p, out, m);
 }
 
 template <class T>
 caf::optional<actor> _spawn_pattern(actor_system &sys, T &p,
-                                        const caf::optional<actor> &out,
-                                        Runtime m) {
+                                    const caf::optional<actor> &out,
+                                    Runtime m) {
   static_assert((is_base_of<Pattern, T>::value != 0),
                 "Type parameter of this function must derive from Pattern");
   // cout << "[DEBUG] " << "inside TOPFUN spawn" << endl;
@@ -44,7 +45,7 @@ template <template <class> class P, typename T>
 typename std::enable_if<std::is_same<P<T>, Seq<T>>::value,
                         caf::optional<actor>>::type
 _spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
-                   Runtime m) {
+               Runtime m) {
   // cout << "[DEBUG] " << "inside NODE spawn" << endl;
   // actor a = apply([&](auto&&... args) {
   //   return sys.spawn<T>(out, std::forward<decltype(args)>(args)...);
@@ -63,7 +64,7 @@ template <template <class> class P, typename T>
 typename std::enable_if<std::is_same<P<T>, Farm<T>>::value,
                         caf::optional<actor>>::type
 _spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
-                   Runtime m) {
+               Runtime m) {
   // cout << "[DEBUG] " << "inside FARM spawn" << endl;
   auto replicas = p.replicas_ ? p.replicas_.value() : 4;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
@@ -82,8 +83,8 @@ _spawn_pattern(actor_system &sys, P<T> &p, const caf::optional<actor> &out,
 template <template <typename> typename P, typename Cnt>
 typename std::enable_if<std::is_same<P<Cnt>, Map<Cnt>>::value,
                         caf::optional<actor>>::type
-_spawn_pattern(actor_system &sys, P<Cnt> &p,
-                   const caf::optional<actor> &out, Runtime m) {
+_spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
+               Runtime m) {
   // cout << "[DEBUG] " << "inside Map spawn" << endl;
   using namespace PartitionSched;
   using Fnc = typename Map<Cnt>::Fnc;
@@ -109,7 +110,7 @@ typename std::enable_if<
     std::is_same<P<CntIn, CntOut>, Map2<CntIn, CntOut>>::value,
     caf::optional<actor>>::type
 _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p,
-                   const caf::optional<actor> &out, Runtime m) {
+               const caf::optional<actor> &out, Runtime m) {
   // cout << "[DEBUG] " << "inside Map spawn" << endl;
   using namespace PartitionSched;
   using Fnc = typename Map2<CntIn, CntOut>::Fnc;
@@ -132,8 +133,8 @@ _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p,
 template <template <class> class P, typename Cnt>
 typename std::enable_if<std::is_same<P<Cnt>, DivConq<Cnt>>::value,
                         caf::optional<actor>>::type
-_spawn_pattern(actor_system &sys, P<Cnt> &p,
-                   const caf::optional<actor> &out, Runtime m) {
+_spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
+               Runtime m) {
   // cout << "[DEBUG] " << "inside DIVCONQ spawn" << endl;
   auto dac = sys.spawn(dac_master_fun<Cnt>, p, out);
   p.instance_ = caf::optional<actor>(dac);
@@ -144,8 +145,8 @@ _spawn_pattern(actor_system &sys, P<Cnt> &p,
 template <template <class> class P, typename... T>
 typename std::enable_if<std::is_same<P<T...>, FarmRouter<T...>>::value,
                         caf::optional<actor>>::type
-_spawn_pattern(actor_system &sys, P<T...> &p,
-                   const caf::optional<actor> &out, Runtime m) {
+_spawn_pattern(actor_system &sys, P<T...> &p, const caf::optional<actor> &out,
+               Runtime m) {
   cout << "[DEBUG] "
        << "inside FARMROUTER spawn" << endl;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
@@ -186,8 +187,8 @@ template <std::size_t I = 0, typename... Tp>
 template <template <class> class P, typename... T>
 typename std::enable_if<std::is_same<P<T...>, Pipeline<T...>>::value,
                         caf::optional<actor>>::type
-_spawn_pattern(actor_system &sys, P<T...> &p,
-                   const caf::optional<actor> &out, Runtime m) {
+_spawn_pattern(actor_system &sys, P<T...> &p, const caf::optional<actor> &out,
+               Runtime m) {
   // cout << "[DEBUG] " << "inside PIPELINE spawn" << endl;
   auto a = for_each_pattern(sys, p.stages_, out, m).value();
   p.instance_ = caf::optional<actor>(a);

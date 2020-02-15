@@ -17,8 +17,8 @@ using ok = atom_constant<caf::atom("ok")>;
 
 template <class CntIn, class CntOut, class Fnc>
 behavior map2_static_worker_actor(event_based_actor *self, Fnc fun_) {
-  return {[=](ns_type<CntIn> &ns_c_in, ns_type<CntOut> &ns_c_out,
-              size_t start, size_t end) {
+  return {[=](ns_type<CntIn> &ns_c_in, ns_type<CntOut> &ns_c_out, size_t start,
+              size_t end) {
     for (auto i = start; i < end; i++) {
       (*ns_c_out)[i] = fun_((*ns_c_in)[i]);
     }
@@ -56,17 +56,17 @@ behavior map2_static_actor(stateful_actor<map2_state> *self, Fnc fun_,
       size_t pend = p + len;
       self->request(w, caf::infinite, ns_c_in, ns_c_out, p, pend)
           .then([=](ok) mutable {
-      if (--(*n_res) == 0) {
-        ns_c_in.release();
-        CntOut c = ns_c_out.release();
-        if (out_) {
-          self->send(out_.value(), move(c));
-          // promis.deliver(0);
-        } else {
-          promis.deliver(move(c));
-        }
-      }
-    });
+            if (--(*n_res) == 0) {
+              ns_c_in.release();
+              CntOut c = ns_c_out.release();
+              if (out_) {
+                self->send(out_.value(), move(c));
+                // promis.deliver(0);
+              } else {
+                promis.deliver(move(c));
+              }
+            }
+          });
       p = pend;
     }
     return promis;
@@ -75,12 +75,13 @@ behavior map2_static_actor(stateful_actor<map2_state> *self, Fnc fun_,
 
 template <class CntIn, class CntOut, class Fnc>
 behavior map2_dynamic_worker_actor(event_based_actor *self, Fnc fun_,
-                                  size_t partition_, shared_ptr<atomic<size_t>> atomic_i_) {
+                                   size_t partition_,
+                                   shared_ptr<atomic<size_t>> atomic_i_) {
   return {[=](ns_type<CntIn> &ns_c_in, ns_type<CntOut> &ns_c_out) {
     size_t size = ns_c_in->size();
     size_t i;
     while ((i = atomic_i_->fetch_add(partition_)) < size) {
-      for (auto j=i; j < i+partition_; j++){
+      for (auto j = i; j < i + partition_; j++) {
         (*ns_c_out)[j] = fun_((*ns_c_in)[j]);
       }
     }
@@ -95,12 +96,13 @@ struct map2_dynamic_state {
 
 template <class CntIn, class CntOut, class Fnc>
 behavior map2_dynamic_actor(stateful_actor<map2_dynamic_state> *self, Fnc fun_,
-                           uint32_t nw_, size_t partition_,
-                           caf::optional<actor> out_) {
+                            uint32_t nw_, size_t partition_,
+                            caf::optional<actor> out_) {
   self->state.atomic_i = make_shared<atomic<size_t>>(0);
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(
-        self->spawn(map2_dynamic_worker_actor<CntIn, CntOut, Fnc>, fun_, partition_, self->state.atomic_i));
+        self->spawn(map2_dynamic_worker_actor<CntIn, CntOut, Fnc>, fun_,
+                    partition_, self->state.atomic_i));
   }
 
   return {[=](CntIn c) mutable {

@@ -81,7 +81,7 @@ template <class CntIn, class CntOut> struct Map2 : public Pattern {
   // TODO: check that Cont is a container
   using In = typename CntIn::value_type;
   using Out = typename CntOut::value_type;
-  using Fnc = function<Out(const In&)>;
+  using Fnc = function<Out(const In &)>;
   Map2(Fnc map_fun) : map_fun_(map_fun), sched_(PartitionSched::static_()) {}
 
   Map2<CntIn, CntOut> &scheduler(PartitionVar sched) {
@@ -152,7 +152,8 @@ template <typename T> struct Farm : public Pattern {
 };
 
 template <class... T> struct FarmRouter : public Pattern {
-  FarmRouter(T &... stages) : stages_(stages...), policy_(actor_pool::round_robin()) {
+  FarmRouter(T &... stages)
+      : stages_(stages...), policy_(actor_pool::round_robin()) {
     static_assert(conjunction_v<is_base_of<Pattern, T>...>,
                   "Type parameter of this class must derive from Pattern");
   }

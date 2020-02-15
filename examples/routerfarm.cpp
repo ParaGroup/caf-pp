@@ -16,9 +16,7 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](msg) {
-      aout(this) << "this is Act1" << endl;
-    }};
+    return {[=](msg) { aout(this) << "this is Act1" << endl; }};
   }
 };
 
@@ -29,9 +27,7 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](msg) {
-      aout(this) << "this is Act2" << endl;
-    }};
+    return {[=](msg) { aout(this) << "this is Act2" << endl; }};
   }
 };
 
