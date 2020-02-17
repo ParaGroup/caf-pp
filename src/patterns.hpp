@@ -13,6 +13,7 @@ using namespace std;
 
 namespace caf_pp {
 enum Runtime { threads, actors };
+ostream &operator<<(ostream &o, Runtime e);
 
 struct Pattern {};
 
