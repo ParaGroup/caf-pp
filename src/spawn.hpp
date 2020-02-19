@@ -134,7 +134,7 @@ template <template <class> class P, typename Cnt>
 typename std::enable_if<std::is_same<P<Cnt>, DivConq<Cnt>>::value,
                         caf::optional<actor>>::type
 _spawn_pattern(actor_system &sys, P<Cnt> &p, const caf::optional<actor> &out,
-               Runtime m) {
+               Runtime) {
   // cout << "[DEBUG] " << "inside DIVCONQ spawn" << endl;
   auto dac = sys.spawn(dac_master_fun<Cnt>, p, out);
   p.instance_ = caf::optional<actor>(dac);
@@ -197,8 +197,8 @@ _spawn_pattern(actor_system &sys, P<T...> &p, const caf::optional<actor> &out,
 
 template <size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), caf::optional<actor>>::type
-for_each_pattern(actor_system &sys, const std::tuple<Tp...> &tp,
-                 const caf::optional<actor> &out, const Runtime &m) {
+for_each_pattern(actor_system &, const std::tuple<Tp...> &,
+                 const caf::optional<actor> &out, const Runtime &) {
   return out;
 }
 

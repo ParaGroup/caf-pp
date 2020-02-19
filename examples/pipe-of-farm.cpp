@@ -89,7 +89,7 @@ struct config : actor_system_config {
   config() { opt_group{custom_options_, "global"}; }
 };
 
-void caf_main(actor_system &sys, const config &cfg) {
+void caf_main(actor_system &sys, const config &) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
 
   Seq<storage> storage_seq;
@@ -100,7 +100,7 @@ void caf_main(actor_system &sys, const config &cfg) {
                           .replicas(3)
                           .runtime(Runtime::threads);
   Seq<dispatcher> dispatcher_seq(
-      [](actor _a) { cout << "[DEBUG] init callback call" << endl; });
+      [](actor) { cout << "[DEBUG] init callback call" << endl; });
   auto dispatcher_farm = Farm(dispatcher_seq)
                              .policy(by_key<string>([](type_erased_tuple &t) {
                                return t.get_as<string>(0) + t.get_as<string>(1);

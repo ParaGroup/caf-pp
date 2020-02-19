@@ -16,7 +16,7 @@ using namespace utils;
 using ok = atom_constant<caf::atom("ok")>;
 
 template <class Cnt, class Fnc>
-behavior map_static_worker_actor(event_based_actor *self, Fnc fun_) {
+behavior map_static_worker_actor(event_based_actor *, Fnc fun_) {
   return {[=](ns_type<Cnt> &ns_c, size_t start, size_t end) {
     // if (__verbose__)
     //   caf::aout(self) << "actor" << self->id() << "_ (" <<
@@ -80,7 +80,7 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
 }
 
 template <class Cnt, class Fnc>
-behavior map_dynamic_worker_actor(event_based_actor *self, Fnc fun_,
+behavior map_dynamic_worker_actor(event_based_actor *, Fnc fun_,
                                   size_t partition_,
                                   shared_ptr<atomic<size_t>> atomic_i_) {
   return {[=](ns_type<Cnt> &ns_c) {

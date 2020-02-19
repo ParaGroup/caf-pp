@@ -22,7 +22,7 @@ struct config : actor_system_config {
   config() { opt_group{custom_options_, "global"}; }
 };
 
-void caf_main(actor_system &sys, const config &cfg) {
+void caf_main(actor_system &sys, const config &) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
   scoped_actor self{sys};
 
