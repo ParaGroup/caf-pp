@@ -57,7 +57,7 @@ add_library(caf_pp src/pp_impl/dac.cpp
                    src/utils/spawn_actor.cpp
                    src/patterns.cpp
                    src/policy.cpp
-                   src/pp_actor.cpp
+                   src/next.cpp
                    src/spawn.cpp
 )
 target_include_directories(caf_pp PUBLIC ./src ${CAF_INCLUDE} ${RANGE_INCLUDE})

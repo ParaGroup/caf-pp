@@ -176,6 +176,29 @@ template <class... T> struct FarmRouter : public Pattern {
   caf::optional<actor> instance_;
 };
 
+template <typename T> struct Farm2 : public Pattern {
+  Farm2(T &stage) : stage_(stage) {
+    static_assert(is_base_of<Pattern, T>::value,
+                  "Type parameter of this class must derive from Pattern");
+  }
+
+  Farm<T> &replicas(uint32_t replicas) {
+    replicas_ = replicas;
+    return *this;
+  };
+
+  Farm<T> &runtime(Runtime runtime) {
+    runtime_ = runtime;
+    return *this;
+  };
+
+  T &stage_;
+  // TODO: add policy_
+  caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
+  caf::optional<actor> instance_;
+};
+
 template <class... T> struct Pipeline : public Pattern {
   Pipeline(T &... stages) : stages_(stages...) {
     static_assert(conjunction_v<is_base_of<Pattern, T>...>,

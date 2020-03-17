@@ -9,7 +9,7 @@ using namespace caf_pp;
 
 class storage : public pp_actor {
 public:
-  storage(actor_config &cfg, caf::optional<actor> next) : pp_actor(cfg, next) {
+  storage(actor_config &cfg, caf::optional<Next> next) : pp_actor(cfg, next) {
     // nop
   }
 
@@ -45,7 +45,7 @@ private:
 
 class dispatcher : public pp_actor {
 public:
-  dispatcher(actor_config &cfg, caf::optional<actor> next)
+  dispatcher(actor_config &cfg, caf::optional<Next> next)
       : pp_actor(cfg, next) {
     // nop
   }

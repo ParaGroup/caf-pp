@@ -5,6 +5,7 @@
 
 #include "../patterns.hpp"
 #include "../utils/ns_type.hpp"
+#include "../next.hpp"
 
 using namespace caf;
 using namespace std;
@@ -85,7 +86,7 @@ struct dac_master_state {
 };
 template <typename Cnt>
 behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
-                        caf::optional<actor> out_) {
+                        caf::optional<Next> out_) {
   return {[=](Cnt &c) mutable {
             // divide
             ns_type<Cnt> ns_c(move(c));
@@ -100,7 +101,7 @@ behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
           [=](up, uint32_t, ns_type<Cnt> ns_c, size_t, size_t) mutable {
             Cnt c = ns_c.release();
             if (out_) {
-              self->send(out_.value(), move(c));
+              out_.value().send(self, move(c));
               self->state.promis.deliver(0);
             } else {
               self->state.promis.deliver(move(c));

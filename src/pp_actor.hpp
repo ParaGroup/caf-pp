@@ -3,25 +3,33 @@
 
 #include <caf/all.hpp>
 
+#include "next.hpp"
+
 using namespace caf;
 using namespace std;
 
 namespace caf_pp {
 
 struct pp_actor : public event_based_actor {
-  pp_actor(actor_config &cfg, caf::optional<actor> next)
+  pp_actor(actor_config &cfg, caf::optional<Next> next)
       : event_based_actor(cfg), next_(next) {
     // nop
   }
 
   template <typename... Args> void send_next(Args... args) {
     if (next_) {
-      send(next_.value(), forward<Args>(args)...);
+      next_.value().send(this, forward<Args>(args)...);
     }
   }
 
-private:
-  caf::optional<actor> next_;
+  template <typename... Args> void send_at(size_t i, Args... args) {
+    if (next_) {
+      next_.value().send_at(this, i, forward<Args>(args)...);
+    }
+  }
+
+protected:
+  caf::optional<Next> next_;
 };
 
 } // namespace caf_pp
