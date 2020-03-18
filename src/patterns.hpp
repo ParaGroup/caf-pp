@@ -182,12 +182,12 @@ template <typename T> struct Farm2 : public Pattern {
                   "Type parameter of this class must derive from Pattern");
   }
 
-  Farm<T> &replicas(uint32_t replicas) {
+  Farm2<T> &replicas(uint32_t replicas) {
     replicas_ = replicas;
     return *this;
   };
 
-  Farm<T> &runtime(Runtime runtime) {
+  Farm2<T> &runtime(Runtime runtime) {
     runtime_ = runtime;
     return *this;
   };
