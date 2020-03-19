@@ -7,7 +7,6 @@ using namespace std;
 
 namespace caf_pp {
 
-// TODO: deduct KEY parameter from GetKey function
 template <class Key, class GetKey, class Router> struct by_key_policy {
   by_key_policy(GetKey gf, Router rf) : gf_(gf), rf_(rf) {
     // nop

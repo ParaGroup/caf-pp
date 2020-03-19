@@ -16,15 +16,21 @@ struct pp_actor : public event_based_actor {
     // nop
   }
 
-  template <typename... Args> void send_next(Args... args) {
+  template <typename... Args> void send_next(Args&&... args) {
     if (next_) {
-      next_.value().send(this, forward<Args>(args)...);
+      next_.value().send(this, make_message(forward<Args>(args)...));
+    }
+  }
+
+  template <typename... Args> void send_next(message&& msg) {
+    if (next_) {
+      next_.value().send(this, move(msg));
     }
   }
 
   template <typename... Args> void send_at(size_t i, Args... args) {
     if (next_) {
-      next_.value().send_at(this, i, forward<Args>(args)...);
+      next_.value().send_at(this, i, make_message(forward<Args>(args)...));
     }
   }
 

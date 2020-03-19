@@ -101,7 +101,7 @@ behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
           [=](up, uint32_t, ns_type<Cnt> ns_c, size_t, size_t) mutable {
             Cnt c = ns_c.release();
             if (out_) {
-              out_.value().send(self, move(c));
+              out_.value().send(self, make_message(move(c)));
               self->state.promis.deliver(0);
             } else {
               self->state.promis.deliver(move(c));

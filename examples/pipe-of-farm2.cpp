@@ -31,7 +31,10 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](string &a) { aout(this) << "[" << current_sender()->id() << "->" << id() << "] " << a << endl; }};
+    return {[=](string &a) {
+      aout(this) << "[" << current_sender()->id() << "->" << id() << "] " << a
+                 << endl;
+    }};
   }
 };
 
@@ -39,9 +42,14 @@ void caf_main(actor_system &sys) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
 
   Seq<Act1> seq1;
-  auto farm1 = Farm2(seq1).replicas(5).runtime(Runtime::actors);
+  auto farm1 = AllFarm(seq1).replicas(5).runtime(Runtime::actors);
   Seq<Act2> seq2;
-  auto farm2 = Farm2(seq2).replicas(3).runtime(Runtime::actors);
+  auto farm2 = AllFarm(seq2)
+                   .policy(ByKeyPolicy<string>([](const message &msg) -> const string& {
+                     return msg.get_as<string>(0);
+                   }))
+                   .replicas(3)
+                   .runtime(Runtime::actors);
   Pipeline pipe(farm1, farm2);
 
   auto first = spawn_pattern(sys, pipe).value();
@@ -49,10 +57,10 @@ void caf_main(actor_system &sys) {
   anon_send(first, "Halo", 1);
   anon_send(first, "Halo", 2);
   anon_send(first, "Halo", 3);
-  anon_send(first, "Halo", 4);
-  anon_send(first, "Halo", 5);
-  anon_send(first, "Halo", 6);
-  anon_send(first, "Halo", 6);
+
+  anon_send(first, "Halo", 1);
+  anon_send(first, "Halo", 2);
+  anon_send(first, "Halo", 3);
 }
 
 CAF_MAIN()

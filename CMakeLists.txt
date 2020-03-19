@@ -59,6 +59,7 @@ add_library(caf_pp src/pp_impl/dac.cpp
                    src/utils/next_tools.cpp
                    src/patterns.cpp
                    src/policy.cpp
+                   src/policy2.cpp
                    src/next.cpp
                    src/spawn.cpp
 )

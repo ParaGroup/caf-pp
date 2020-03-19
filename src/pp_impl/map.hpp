@@ -56,7 +56,7 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
       if (--(*n_res) == 0) {
         Cnt c = ns_c.release();
         if (out_) {
-          out_.value().send(self, move(c));
+          out_.value().send(self, make_message(move(c)));
           promis.deliver(0);
         } else {
           promis.deliver(move(c));
@@ -121,7 +121,7 @@ behavior map_dynamic_actor(stateful_actor<map_dynamic_state> *self, Fnc fun_,
         if (--(*n_res) == 0) {
           Cnt c = ns_c.release();
           if (out_) {
-            out_.value().send(self, move(c));
+            out_.value().send(self, make_message(move(c)));
           } else {
             promis.deliver(move(c));
           }

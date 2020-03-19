@@ -2,47 +2,41 @@
 
 #include <caf/all.hpp>
 
+#include "policy2.hpp"
+
 using namespace std;
 using namespace caf;
 
 namespace caf_pp {
 
-using RoundRobinPolicy = function<actor &(vector<actor> &)>;
-RoundRobinPolicy round_robin_factory() {
-  auto i = make_shared<size_t>(0);
-  return [=](vector<actor> &nexts) -> actor & {
-    actor &next = nexts.at(*i % nexts.size());
-    *i += 1;
-    return next;
-  };
-}
-
 struct Next {
-  Next(vector<actor> nexts) : nexts_(nexts), policy_(round_robin_factory()) {
+  Next(vector<actor> nexts, Policy policy) : nexts_(nexts), policy_(policy) {
+    // nop
+  }
+  Next(vector<actor> nexts) : Next(nexts, RoundRobinPolicy()) {
     // nop
   }
   Next(actor a) : Next(vector<actor>({a})) {
     // nop
   }
-  Next(const Next &n) : Next(n.nexts_) {
+  Next(const Next &other) : Next(other.nexts_, other.policy_) {
     // nop
   }
-  template <typename... Args> void send(event_based_actor* a, Args... args) {
+  template <typename... Args> void send(event_based_actor *a, message &&msg) {
     if (!nexts_.empty()) {
-      a->send(policy_(nexts_), forward<Args>(args)...);
+      a->send(policy_(nexts_, msg), move(msg));
     }
   }
-  template <typename... Args>
-  void send_at(event_based_actor* a, size_t i, Args... args) {
+  void send_at(event_based_actor *a, size_t i, message &&msg) {
     if (!nexts_.empty()) {
-      a->send(nexts_.at(i), forward<Args>(args)...);
+      a->send(nexts_.at(i), move(msg));
     }
   }
-  vector<actor> &workers() { return nexts_; }
+  const vector<actor> &workers() { return nexts_; }
 
 private:
   vector<actor> nexts_;
-  RoundRobinPolicy policy_;
+  Policy policy_;
 };
 
 } // namespace caf_pp

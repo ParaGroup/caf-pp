@@ -77,13 +77,13 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
   return Next(a);
 }
 
-// SPAWN FARM2
+// SPAWN ALLFARM
 template <template <class> class P, typename T>
-typename std::enable_if<std::is_same<P<T>, Farm2<T>>::value, Next>::type
+typename std::enable_if<std::is_same<P<T>, AllFarm<T>>::value, Next>::type
 _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
                Runtime m) {
-  cout << "[DEBUG] "
-       << "inside FARM2 spawn" << endl;
+  // cout << "[DEBUG] "
+  //      << "inside ALLFARM spawn" << endl;
   auto replicas = p.replicas_ ? p.replicas_.value() : 4;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
 
@@ -92,8 +92,7 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
     auto worker = _spawn_pattern(sys, p.stage_, next, runtime);
     workers.push_back(next_to_actor(sys, move(worker)));
   }
-  // TODO: add policy
-  auto n = Next(workers);
+  auto n = Next(workers, p.policy_);
   p.instance_ = sys.spawn<Emitter>(n);
   return n;
 }
@@ -163,8 +162,8 @@ typename std::enable_if<std::is_same<P<T...>, FarmRouter<T...>>::value,
                         Next>::type
 _spawn_pattern(actor_system &sys, P<T...> &p, caf::optional<Next> next,
                Runtime m) {
-  cout << "[DEBUG] "
-       << "inside FARMROUTER spawn" << endl;
+  // cout << "[DEBUG] "
+  //      << "inside FARMROUTER spawn" << endl;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
   auto replicas = std::tuple_size<decltype(p.stages_)>::value;
   size_t i(0);

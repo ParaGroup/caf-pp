@@ -7,6 +7,7 @@
 #include <range/v3/all.hpp>
 
 #include "pp_actor.hpp"
+#include "policy2.hpp"
 
 using namespace caf;
 using namespace std;
@@ -176,24 +177,29 @@ template <class... T> struct FarmRouter : public Pattern {
   caf::optional<actor> instance_;
 };
 
-template <typename T> struct Farm2 : public Pattern {
-  Farm2(T &stage) : stage_(stage) {
+template <typename T> struct AllFarm : public Pattern {
+  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()) {
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
 
-  Farm2<T> &replicas(uint32_t replicas) {
+  AllFarm &policy(Policy policy) {
+    policy_ = policy;
+    return *this;
+  };
+
+  AllFarm &replicas(uint32_t replicas) {
     replicas_ = replicas;
     return *this;
   };
 
-  Farm2<T> &runtime(Runtime runtime) {
+  AllFarm &runtime(Runtime runtime) {
     runtime_ = runtime;
     return *this;
   };
 
   T &stage_;
-  // TODO: add policy_
+  Policy policy_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
   caf::optional<actor> instance_;
