@@ -115,9 +115,9 @@ void caf_main(actor_system &sys, const config &) {
   auto c1 = sys.spawn<client>();
   auto c2 = sys.spawn<client>();
   auto dispatcher_actor = dispatcher_farm.instance_.value();
-  anon_send(dispatcher_actor, "asd", "1", c1);
-  anon_send(dispatcher_actor, "asd", "2", c1);
-  anon_send(dispatcher_actor, "asd", "3", c2);
+  dispatcher_actor.send(make_message("asd", "1", c1));
+  dispatcher_actor.send(make_message("asd", "2", c1));
+  dispatcher_actor.send(make_message("asd", "3", c2));
 
   // send updates
   anon_send(first, "asd", make_tuple(1, 2, 3));

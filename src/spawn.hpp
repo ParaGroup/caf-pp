@@ -54,8 +54,8 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
   if (p.spawn_cb_) {
     p.spawn_cb_.value()(a);
   }
-  p.instance_ = a;
-  return Next(a);
+  p.instance_ = Next(a);
+  return p.instance_.value();
 }
 
 // SPAWN FARM
@@ -73,8 +73,8 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
   // cout << "[DEBUG] " << "make actor_pool" << endl;
   auto a = caf::actor_pool::make(sys.dummy_execution_unit(), replicas,
                                  spawn_fun, p.policy_);
-  p.instance_ = a;
-  return Next(a);
+  p.instance_ = Next(a);
+  return a;
 }
 
 // SPAWN ALLFARM
@@ -93,7 +93,7 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
     workers.push_back(next_to_actor(sys, move(worker)));
   }
   auto n = Next(workers, p.policy_);
-  p.instance_ = sys.spawn<Emitter>(n);
+  p.instance_ = n;
   return n;
 }
 
@@ -116,8 +116,8 @@ _spawn_pattern(actor_system &sys, P<Cnt> &p, caf::optional<Next> next,
     map = spawn_actor(sys, runtime, map_dynamic_actor<Cnt, Fnc>, p.map_fun_,
                       replicas, partition, next);
   }
-  p.instance_ = map;
-  return Next(map);
+  p.instance_ = Next(map);
+  return p.instance_.value();
 }
 
 // SPAWN MAP2
@@ -141,8 +141,8 @@ _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p, caf::optional<Next> next,
     map = spawn_actor(sys, runtime, map2_dynamic_actor<CntIn, CntOut, Fnc>,
                       p.map_fun_, replicas, partition, next);
   }
-  p.instance_ = map;
-  return Next(map);
+  p.instance_ = Next(map);
+  return  p.instance_.value();
 }
 
 // SPAWN DIVCONQ
@@ -152,8 +152,8 @@ _spawn_pattern(actor_system &sys, P<Cnt> &p, caf::optional<Next> next,
                Runtime) {
   // cout << "[DEBUG] " << "inside DIVCONQ spawn" << endl;
   auto dac = sys.spawn(dac_master_fun<Cnt>, p, next);
-  p.instance_ = dac;
-  return Next(dac);
+  p.instance_ = Next(dac);
+  return p.instance_.value();
 }
 
 // SPAWN FARMROUTER
@@ -175,8 +175,8 @@ _spawn_pattern(actor_system &sys, P<T...> &p, caf::optional<Next> next,
   };
   auto a = caf::actor_pool::make(sys.dummy_execution_unit(), replicas,
                                  spawn_fun, p.policy_);
-  p.instance_ = a;
-  return Next(a);
+  p.instance_ = Next(a);
+  return p.instance_.value();
 }
 
 template <std::size_t I = 0, typename... Tp>
@@ -206,8 +206,8 @@ _spawn_pattern(actor_system &sys, P<T...> &p, caf::optional<Next> next,
                Runtime m) {
   // cout << "[DEBUG] " << "inside PIPELINE spawn" << endl;
   auto a = for_each_pattern(sys, p.stages_, next, m);
-  p.instance_ = next_to_actor(sys, Next(a));
-  return a;
+  p.instance_ = Next(a);
+  return p.instance_.value();
 }
 
 template <size_t I = 0, typename... Tp>
