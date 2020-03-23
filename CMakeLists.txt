@@ -49,23 +49,13 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 include(CPack)
 
-# Targets
-add_library(caf_pp src/pp_impl/dac.cpp
-                   src/pp_impl/map.cpp
-                   src/pp_impl/map2.cpp
-                   src/pp_impl/emitter.cpp
-                   src/utils/ns_type.cpp
-                   src/utils/spawn_actor.cpp
-                   src/utils/next_tools.cpp
-                   src/patterns.cpp
-                   src/policy.cpp
-                   src/policy2.cpp
-                   src/next.cpp
-                   src/spawn.cpp
-)
+# Library
+add_library(caf_pp src/patterns.cpp
+                   src/next.cpp)
 target_include_directories(caf_pp PUBLIC ./src ${CAF_INCLUDE} ${RANGE_INCLUDE})
 target_link_libraries(caf_pp ${CAF_LIB} pthread)
 
+# Targets
 add_executable (pipe-of-farm examples/pipe-of-farm.cpp)
 target_include_directories(pipe-of-farm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
 target_link_libraries(pipe-of-farm caf_pp ${CAF_LIB})
