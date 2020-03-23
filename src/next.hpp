@@ -22,17 +22,11 @@ struct Next {
   Next(const Next &other) : Next(other.nexts_, other.policy_) {
     // nop
   }
-  template <typename... Args> void send(event_based_actor *a, message &&msg) {
-    if (!nexts_.empty()) {
-      a->send(policy_(nexts_, msg), move(msg));
-    }
-  }
-  void send_at(event_based_actor *a, size_t i, message &&msg) {
-    if (!nexts_.empty()) {
-      a->send(nexts_.at(i), move(msg));
-    }
-  }
-  const vector<actor> &workers() { return nexts_; }
+  void send(event_based_actor *a, message &&msg);
+  void send_at(event_based_actor *a, size_t i, message &&msg);
+  void send_all(event_based_actor *a, message &&msg);
+  const vector<actor> &workers();
+  Policy &policy();
 
 private:
   vector<actor> nexts_;
