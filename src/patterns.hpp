@@ -14,7 +14,7 @@ using namespace std;
 
 namespace caf_pp {
 enum Runtime { threads, actors };
-ostream &operator<<(ostream &o, Runtime e);
+ostream &operator<<(ostream &o, Runtime& e);
 
 struct Pattern {};
 
@@ -51,6 +51,7 @@ struct dynamic_ {
 } // namespace PartitionSched
 using PartitionVar =
     std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
+ostream &operator<<(ostream &o, PartitionVar& e);
 
 template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container

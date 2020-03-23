@@ -44,14 +44,15 @@ void caf_main(actor_system &sys) {
   Seq<Act1> seq1;
   auto farm1 = AllFarm(seq1).replicas(5).runtime(Runtime::actors);
   Seq<Act2> seq2;
-  auto farm2 = AllFarm(seq2)
-                   .policy(ByKeyPolicy<string>([](const message &msg) -> const string& {
-                     return msg.get_as<string>(0);
-                   }))
-                   .replicas(3)
-                   .runtime(Runtime::actors);
+  auto farm2 =
+      AllFarm(seq2)
+          .policy(ByKeyPolicy<string>([](const message &msg) -> const string & {
+            return msg.get_as<string>(0);
+          }))
+          .replicas(3)
+          .runtime(Runtime::actors);
   Pipeline pipe(farm1, farm2);
-
+  cout << "    Pattern: " << pipe << endl;
   auto first = spawn_pattern(sys, pipe).value();
 
   anon_send(first, "Halo", 1);

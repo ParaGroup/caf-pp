@@ -37,6 +37,7 @@ void caf_main(actor_system &sys) {
   Seq<Act1> act1;
   Seq<Act2> act2;
   auto farm = FarmRouter(act1, act2).policy(actor_pool::random());
+  cout << "    Pattern: " << farm << endl;
   auto first = spawn_pattern_with(sys, farm, Runtime::threads).value();
 
   anon_send(first, msg::value);

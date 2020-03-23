@@ -67,6 +67,7 @@ void caf_main(actor_system &sys, const config &) {
     return op.size() < 2;
   };
   DivConq<Cnt> dac(div, merge, seq, cond);
+  cout << "    Pattern: " << dac << endl;
   auto handle = spawn_pattern(sys, dac).value();
 
   vector<int64_t> vec{3, 4, 1, 7, 8, 5, 2};

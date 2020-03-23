@@ -108,7 +108,7 @@ void caf_main(actor_system &sys, const config &) {
                              .replicas(3)
                              .runtime(Runtime::actors);
   Pipeline pipe(storage_farm, dispatcher_farm);
-
+  cout << "    Pattern: " << pipe << endl;
   auto first = spawn_pattern(sys, pipe).value();
 
   // subscribe 2 clients
