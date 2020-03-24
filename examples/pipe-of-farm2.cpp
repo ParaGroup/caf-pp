@@ -32,9 +32,17 @@ public:
 
   behavior make_behavior() override {
     return {[=](string &a) {
-      aout(this) << "[" << current_sender()->id() << "->" << id() << "] " << a
-                 << endl;
-    }};
+              aout(this) << "[" << current_sender()->id() << "->" << id()
+                         << "] " << a << endl;
+            },
+            [=](vector<message> &in) {
+              aout(this) << endl << "batch " << in.size() << endl;
+              for (auto &msg : in) {
+                auto a = msg.get_as<string>(0);
+                aout(this) << "[" << (current_sender() ? to_string(current_sender()->id()) : "anon") << "->" << id()
+                           << "] " << a << endl;
+              }
+            }};
   }
 };
 
@@ -50,6 +58,7 @@ void caf_main(actor_system &sys) {
             return msg.get_as<string>(0);
           }))
           .replicas(3)
+          .batch(5)
           .runtime(Runtime::actors);
   Pipeline pipe(farm1, farm2);
   cout << "    Pattern: " << pipe << endl;

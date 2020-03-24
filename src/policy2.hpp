@@ -7,7 +7,7 @@ using namespace caf;
 using namespace std;
 
 namespace caf_pp {
-using Policy = function<caf::optional<const actor &>(const vector<actor> &, const message &)>;
+using Policy = function<caf::optional<size_t>(const vector<actor> &, const message &)>;
 
 struct RoundRobinPolicy {
   RoundRobinPolicy() : index_(0) {
@@ -16,12 +16,12 @@ struct RoundRobinPolicy {
   RoundRobinPolicy(const RoundRobinPolicy &) : RoundRobinPolicy() {
     // nop
   }
-  caf::optional<const actor &> operator()(const vector<actor> &nexts, const message &) {
+  caf::optional<size_t> operator()(const vector<actor> &nexts, const message &) {
     // cout << "[DEBUG] " << "Policy RoundRobinPolicy called with " <<
     // msg.content().stringify() << endl;
-    const actor &next = nexts[index_ % nexts.size()];
+    auto i = index_ % nexts.size();
     index_ += 1;
-    return next;
+    return i;
   }
 
 private:
@@ -35,8 +35,8 @@ struct BroadcastPolicy {
   BroadcastPolicy(const BroadcastPolicy &) : BroadcastPolicy() {
     // nop
   }
-  caf::optional<const actor &> operator()(const vector<actor> &, const message &) {
-    return caf::optional<const actor &>();
+  caf::optional<size_t> operator()(const vector<actor> &, const message &) {
+    return caf::optional<size_t>();
   }
 };
 
@@ -55,14 +55,14 @@ template <typename T> struct ByKeyPolicy {
       : ByKeyPolicy(other.get_key_, other.router_) {
     // nop
   }
-  caf::optional<const actor &> operator()(const vector<actor> &nexts, const message &msg) {
+  caf::optional<size_t> operator()(const vector<actor> &nexts, const message &msg) {
     // cout << "[DEBUG] " <<"ByKeyPolicy called with " <<
     // msg.content().stringify() << endl;
     const T &key = get_key_(msg);
     size_t hashcode = hash_fun_(key);
     size_t index = router_(hashcode, nexts.size());
     // cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << endl;
-    return nexts[index];
+    return index;
   }
 
 private:

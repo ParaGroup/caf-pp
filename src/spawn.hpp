@@ -2,8 +2,8 @@
 
 #include <caf/all.hpp>
 
-#include "patterns.hpp"
 #include "next.hpp"
+#include "patterns.hpp"
 #include "pp_impl/dac.hpp"
 #include "pp_impl/emitter.hpp"
 #include "pp_impl/map.hpp"
@@ -92,7 +92,7 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
     auto worker = _spawn_pattern(sys, p.stage_, next, runtime);
     workers.push_back(next_to_actor(sys, move(worker)));
   }
-  auto n = Next(workers, p.policy_);
+  auto n = Next(workers, p.policy_, p.batch_);
   p.instance_ = n;
   return n;
 }
@@ -142,7 +142,7 @@ _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p, caf::optional<Next> next,
                       p.map_fun_, replicas, partition, next);
   }
   p.instance_ = Next(map);
-  return  p.instance_.value();
+  return p.instance_.value();
 }
 
 // SPAWN DIVCONQ

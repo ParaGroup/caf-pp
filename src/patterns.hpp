@@ -175,7 +175,7 @@ template <class... T> struct FarmRouter : public Pattern {
 };
 
 template <typename T> struct AllFarm : public Pattern {
-  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()) {
+  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()), batch_(1) {
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
@@ -195,8 +195,14 @@ template <typename T> struct AllFarm : public Pattern {
     return *this;
   };
 
+  AllFarm &batch(size_t batch) {
+    batch_ = batch;
+    return *this;
+  };
+
   T &stage_;
   Policy policy_;
+  size_t batch_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
 };
