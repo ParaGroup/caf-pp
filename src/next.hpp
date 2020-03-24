@@ -22,7 +22,7 @@ struct Next {
   Next(const Next &other) : Next(other.nexts_, other.policy_) {
     // nop
   }
-  Next& operator=(const caf_pp::Next& other) {
+  Next &operator=(const caf_pp::Next &other) {
     nexts_ = other.nexts_;
     policy_ = other.policy_;
     return *this;

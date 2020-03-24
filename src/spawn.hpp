@@ -2,8 +2,8 @@
 
 #include <caf/all.hpp>
 
-#include "patterns.hpp"
 #include "next.hpp"
+#include "patterns.hpp"
 #include "pp_impl/dac.hpp"
 #include "pp_impl/emitter.hpp"
 #include "pp_impl/map.hpp"
@@ -142,7 +142,7 @@ _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p, caf::optional<Next> next,
                       p.map_fun_, replicas, partition, next);
   }
   p.instance_ = Next(map);
-  return  p.instance_.value();
+  return p.instance_.value();
 }
 
 // SPAWN DIVCONQ

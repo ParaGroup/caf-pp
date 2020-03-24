@@ -1,12 +1,5 @@
 #include "next.hpp"
 
-#include <caf/all.hpp>
-
-#include "policy2.hpp"
-
-using namespace std;
-using namespace caf;
-
 namespace caf_pp {
 
 void Next::send(event_based_actor *a, message &&msg) {
