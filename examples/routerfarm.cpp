@@ -11,7 +11,8 @@ using msg = atom_constant<caf::atom("msg")>;
 
 class Act1 : public pp_actor {
 public:
-  Act1(actor_config &cfg, caf::optional<Next> next) : pp_actor(cfg, next) {
+  Act1(actor_config &cfg, caf::optional<unique_ptr<Next>> next)
+      : pp_actor(cfg, move(next)) {
     // nop
   }
 
@@ -22,7 +23,8 @@ public:
 
 class Act2 : public pp_actor {
 public:
-  Act2(actor_config &cfg, caf::optional<Next> next) : pp_actor(cfg, next) {
+  Act2(actor_config &cfg, caf::optional<unique_ptr<Next>> next)
+      : pp_actor(cfg, move(next)) {
     // nop
   }
 

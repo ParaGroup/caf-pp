@@ -10,11 +10,11 @@ using namespace caf;
 namespace caf_pp {
 namespace utils {
 
-actor next_to_actor(actor_system &sys, Next &&next) {
-  if (next.size() == 1) {
-    return next.actors()[0];
+actor next_to_actor(actor_system &sys, unique_ptr<Next> next) {
+  if (next->size() == 1) {
+    return next->actors()[0];
   } else {
-    return sys.spawn<pp_impl::Emitter>(next);
+    return sys.spawn<pp_impl::Emitter>(move(next));
   }
 }
 

@@ -34,7 +34,7 @@ struct map_state {
 };
 template <class Cnt, class Fnc>
 behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
-                          uint32_t nw_, caf::optional<Next> out_) {
+                          uint32_t nw_, caf::optional<unique_ptr<Next>> out_) {
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(
         self->spawn(map_static_worker_actor<Cnt, Fnc>, fun_));
@@ -56,7 +56,7 @@ behavior map_static_actor(stateful_actor<map_state> *self, Fnc fun_,
       if (--(*n_res) == 0) {
         Cnt c = ns_c.release();
         if (out_) {
-          out_.value().send(self, make_message(move(c)));
+          out_.value()->send(self, make_message(move(c)));
           promis.deliver(0);
         } else {
           promis.deliver(move(c));
@@ -102,7 +102,7 @@ struct map_dynamic_state {
 template <class Cnt, class Fnc>
 behavior map_dynamic_actor(stateful_actor<map_dynamic_state> *self, Fnc fun_,
                            uint32_t nw_, size_t partition_,
-                           caf::optional<Next> out_) {
+                           caf::optional<unique_ptr<Next>> out_) {
   self->state.atomic_i = make_shared<atomic<size_t>>(0);
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(self->spawn(map_dynamic_worker_actor<Cnt, Fnc>,
@@ -121,7 +121,7 @@ behavior map_dynamic_actor(stateful_actor<map_dynamic_state> *self, Fnc fun_,
         if (--(*n_res) == 0) {
           Cnt c = ns_c.release();
           if (out_) {
-            out_.value().send(self, make_message(move(c)));
+            out_.value()->send(self, make_message(move(c)));
           } else {
             promis.deliver(move(c));
           }

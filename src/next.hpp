@@ -12,11 +12,7 @@ using ranges::view::zip;
 namespace caf_pp {
 
 struct Next {
-  Next(vector<actor> nexts, Policy policy, size_t batch)
-      : nexts_(nexts), policy_(policy), messages_(nexts.size()), batch_(batch) {
-    // nop
-  }
-  Next(vector<actor> nexts, Policy policy) : Next(nexts, policy, 1) {
+  Next(vector<actor> nexts, Policy policy) : nexts_(nexts), policy_(policy) {
     // nop
   }
   Next(vector<actor> nexts) : Next(nexts, RoundRobinPolicy()) {
@@ -25,26 +21,16 @@ struct Next {
   Next(actor a) : Next(vector<actor>({a})) {
     // nop
   }
-  ~Next() {
-    for (auto &&[n, m] : zip(nexts_, messages_)) {
-      if (!m.empty()) {
-        anon_send(n, move(m));
-      }
-    }
-  }
 
-  Next(const Next &other) : Next(other.nexts_, other.policy_, other.batch_) {
+  Next(const Next &other) : Next(other.nexts_, other.policy_) {
     // nop
   }
-  Next &operator=(const caf_pp::Next &other) {
-    nexts_ = other.nexts_;
-    policy_ = other.policy_;
-    batch_ = other.batch_;
-    messages_ = vector<vector<message>>(nexts_.size());
+  virtual Next &operator=(const Next &other) {
+    assign(other);
     return *this;
   }
 
-  void send(event_based_actor *a, message &&msg);
+  virtual void send(event_based_actor *a, message &&msg);
   void send(message &&msg);
 
   inline void send_at(event_based_actor *a, size_t i, message &&msg) {
@@ -62,14 +48,60 @@ struct Next {
   inline size_t size() { return nexts_.size(); }
   inline Policy &policy() { return policy_; }
 
-private:
-  void send_no_batch(event_based_actor *a, message &&msg);
-  void send_batch(event_based_actor *a, message &&msg);
-  
+protected:
   vector<actor> nexts_;
   Policy policy_;
+  void assign(const Next &other) {
+    nexts_ = other.nexts_;
+    policy_ = other.policy_;
+  }
+};
+
+struct NextBatch : public Next {
+  NextBatch(vector<actor> nexts, Policy policy, size_t batch)
+      : Next(nexts, policy), messages_(nexts.size()), batch_(batch) {
+    // nop
+  }
+  NextBatch(vector<actor> nexts, Policy policy) : NextBatch(nexts, policy, 1) {
+    // nop
+  }
+  NextBatch(vector<actor> nexts) : NextBatch(nexts, RoundRobinPolicy()) {
+    // nop
+  }
+  NextBatch(actor a) : NextBatch(vector<actor>({a})) {
+    // nop
+  }
+  virtual ~NextBatch() {
+    for (auto &&[n, m] : zip(nexts_, messages_)) {
+      if (!m.empty()) {
+        anon_send(n, move(m));
+      }
+    }
+  }
+
+  NextBatch(const NextBatch &other)
+      : NextBatch(other.nexts_, other.policy_, other.batch_) {
+    // nop
+  }
+  virtual NextBatch &operator=(const Next &other) {
+    if (const NextBatch *b = dynamic_cast<const NextBatch *>(&other)) {
+      assign(*b);
+    } else {
+      throw std::runtime_error("bad assignement");
+    }
+    return *this;
+  }
+
+  virtual void send(event_based_actor *a, message &&msg) override;
+
+protected:
   vector<vector<message>> messages_;
   size_t batch_;
+  void assign(const NextBatch &other) {
+    Next::assign(other);
+    batch_ = other.batch_;
+    messages_ = vector<vector<message>>(nexts_.size());
+  }
 };
 
 } // namespace caf_pp

@@ -32,7 +32,7 @@ struct map2_state {
 };
 template <class CntIn, class CntOut, class Fnc>
 behavior map2_static_actor(stateful_actor<map2_state> *self, Fnc fun_,
-                           uint32_t nw_, caf::optional<Next> out_) {
+                           uint32_t nw_, caf::optional<unique_ptr<Next>> out_) {
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(
         self->spawn(map2_static_worker_actor<CntIn, CntOut, Fnc>, fun_));
@@ -61,7 +61,7 @@ behavior map2_static_actor(stateful_actor<map2_state> *self, Fnc fun_,
               ns_c_in.release();
               CntOut c = ns_c_out.release();
               if (out_) {
-                out_.value().send(self, make_message(move(c)));
+                out_.value()->send(self, make_message(move(c)));
                 // promis.deliver(0);
               } else {
                 promis.deliver(move(c));
@@ -98,7 +98,7 @@ struct map2_dynamic_state {
 template <class CntIn, class CntOut, class Fnc>
 behavior map2_dynamic_actor(stateful_actor<map2_dynamic_state> *self, Fnc fun_,
                             uint32_t nw_, size_t partition_,
-                            caf::optional<Next> out_) {
+                            caf::optional<unique_ptr<Next>> out_) {
   self->state.atomic_i = make_shared<atomic<size_t>>(0);
   for (auto i = 0u; i < nw_; i++) {
     self->state.worker.push_back(
@@ -119,7 +119,7 @@ behavior map2_dynamic_actor(stateful_actor<map2_dynamic_state> *self, Fnc fun_,
           ns_c_in.release();
           CntOut c = ns_c_out.release();
           if (out_) {
-            out_.value().send(self, make_message(move(c)));
+            out_.value()->send(self, make_message(move(c)));
           } else {
             promis.deliver(move(c));
           }

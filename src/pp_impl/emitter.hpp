@@ -9,7 +9,7 @@ namespace caf_pp {
 namespace pp_impl {
 
 struct Emitter : public pp_actor {
-  Emitter(actor_config &cfg, caf::optional<Next> next) : pp_actor(cfg, next) {
+  Emitter(actor_config &cfg, caf::optional<unique_ptr<Next>> next) : pp_actor(cfg, next) {
     // nop
   }
 

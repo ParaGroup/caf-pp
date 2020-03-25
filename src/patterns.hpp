@@ -17,7 +17,7 @@ enum Runtime { threads, actors };
 ostream &operator<<(ostream &o, Runtime& e);
 
 struct Pattern {
-  caf::optional<Next> instance_;
+  caf::optional<unique_ptr<Next>> instance_;
 };
 
 using SpawnCb = function<void(actor)>;
@@ -175,7 +175,7 @@ template <class... T> struct FarmRouter : public Pattern {
 };
 
 template <typename T> struct AllFarm : public Pattern {
-  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()), batch_(1) {
+  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()) {
     static_assert(is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
@@ -202,7 +202,7 @@ template <typename T> struct AllFarm : public Pattern {
 
   T &stage_;
   Policy policy_;
-  size_t batch_;
+  caf::optional<size_t> batch_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
 };
