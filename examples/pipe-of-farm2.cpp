@@ -20,6 +20,7 @@ public:
         res += a;
       }
       send_next(res);
+      // flush();
     }};
   }
 };
@@ -58,7 +59,7 @@ void caf_main(actor_system &sys) {
             return msg.get_as<string>(0);
           }))
           .replicas(3)
-          .batch(5)
+          .batch(2)
           .runtime(Runtime::actors);
   Pipeline pipe(farm1, farm2);
   cout << "    Pattern: " << pipe << endl;

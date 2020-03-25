@@ -26,11 +26,7 @@ struct Next {
     // nop
   }
   ~Next() {
-    for (auto &&[n, m] : zip(nexts_, messages_)) {
-      if (!m.empty()) {
-        anon_send(n, move(m));
-      }
-    }
+    flush();
   }
 
   Next(const Next &other) : Next(other.nexts_, other.policy_, other.batch_) {
@@ -46,6 +42,8 @@ struct Next {
 
   void send(event_based_actor *a, message &&msg);
   void send(message &&msg);
+  void flush(event_based_actor *a);
+  void flush();
 
   inline void send_at(event_based_actor *a, size_t i, message &&msg) {
     a->send(nexts_.at(i), move(msg));

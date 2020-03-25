@@ -40,6 +40,12 @@ struct pp_actor : public event_based_actor {
     }
   }
 
+  inline void flush() {
+    if (next_) {
+      next_.value().flush(this);
+    }
+  }
+
   inline caf::optional<const actor &> get_next(message &msg) {
     if (next_) {
       return next_.value().get_next(msg);

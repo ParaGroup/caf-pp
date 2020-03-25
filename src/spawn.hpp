@@ -41,7 +41,7 @@ Next _spawn_pattern(actor_system &sys, T &p, caf::optional<Next> next,
                 "Type parameter of this function must derive from Pattern");
   cout << "[DEBUG] "
        << "inside TOPFUN spawn" << endl;
-  return next.value();
+  return move(next.value());
 }
 
 // SPAWN NODE
@@ -50,12 +50,12 @@ typename std::enable_if<std::is_same<P<T>, Seq<T>>::value, Next>::type
 _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
                Runtime m) {
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
-  actor a = spawn_actor<T>(sys, runtime, next);
+  actor a = spawn_actor<T>(sys, runtime, move(next));
   if (p.spawn_cb_) {
     p.spawn_cb_.value()(a);
   }
   p.instance_ = Next(a);
-  return p.instance_.value();
+  return Next(a);
 }
 
 // SPAWN FARM
@@ -74,7 +74,7 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
   auto a = caf::actor_pool::make(sys.dummy_execution_unit(), replicas,
                                  spawn_fun, p.policy_);
   p.instance_ = Next(a);
-  return a;
+  return Next(a);
 }
 
 // SPAWN ALLFARM
@@ -110,14 +110,14 @@ _spawn_pattern(actor_system &sys, P<Cnt> &p, caf::optional<Next> next,
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
   if (holds_alternative<static_>(p.sched_)) {
     map = spawn_actor(sys, runtime, map_static_actor<Cnt, Fnc>, p.map_fun_,
-                      replicas, next);
+                      replicas, move(next));
   } else {
     auto partition = get<dynamic_>(p.sched_).partition;
     map = spawn_actor(sys, runtime, map_dynamic_actor<Cnt, Fnc>, p.map_fun_,
-                      replicas, partition, next);
+                      replicas, partition, move(next));
   }
   p.instance_ = Next(map);
-  return p.instance_.value();
+  return Next(map);
 }
 
 // SPAWN MAP2
@@ -135,14 +135,14 @@ _spawn_pattern(actor_system &sys, P<CntIn, CntOut> &p, caf::optional<Next> next,
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
   if (holds_alternative<static_>(p.sched_)) {
     map = spawn_actor(sys, runtime, map2_static_actor<CntIn, CntOut, Fnc>,
-                      p.map_fun_, replicas, next);
+                      p.map_fun_, replicas, move(next));
   } else {
     auto partition = get<dynamic_>(p.sched_).partition;
     map = spawn_actor(sys, runtime, map2_dynamic_actor<CntIn, CntOut, Fnc>,
-                      p.map_fun_, replicas, partition, next);
+                      p.map_fun_, replicas, partition, move(next));
   }
   p.instance_ = Next(map);
-  return p.instance_.value();
+  return Next(map);
 }
 
 // SPAWN DIVCONQ
@@ -151,9 +151,9 @@ typename std::enable_if<std::is_same<P<Cnt>, DivConq<Cnt>>::value, Next>::type
 _spawn_pattern(actor_system &sys, P<Cnt> &p, caf::optional<Next> next,
                Runtime) {
   // cout << "[DEBUG] " << "inside DIVCONQ spawn" << endl;
-  auto dac = sys.spawn(dac_master_fun<Cnt>, p, next);
+  auto dac = sys.spawn(dac_master_fun<Cnt>, p, move(next));
   p.instance_ = Next(dac);
-  return p.instance_.value();
+  return Next(dac);
 }
 
 // SPAWN FARMROUTER
@@ -176,14 +176,14 @@ _spawn_pattern(actor_system &sys, P<T...> &p, caf::optional<Next> next,
   auto a = caf::actor_pool::make(sys.dummy_execution_unit(), replicas,
                                  spawn_fun, p.policy_);
   p.instance_ = Next(a);
-  return p.instance_.value();
+  return Next(a);
 }
 
 template <std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), Next>::type
 for_index_pattern(size_t, const std::tuple<Tp...> &, actor_system &,
                   caf::optional<Next> next, const Runtime &) {
-  return next.value();
+  return move(next.value());
 }
 
 template <std::size_t I = 0, typename... Tp>
@@ -192,9 +192,9 @@ template <std::size_t I = 0, typename... Tp>
     for_index_pattern(size_t i, const std::tuple<Tp...> &tp, actor_system &sys,
                       caf::optional<Next> next, const Runtime &m) {
   if (i == 0u) {
-    return _spawn_pattern(sys, std::get<I>(tp), next, m);
+    return _spawn_pattern(sys, std::get<I>(tp), move(next), m);
   } else {
-    return for_index_pattern<I + 1, Tp...>(i - 1, tp, sys, next, m);
+    return for_index_pattern<I + 1, Tp...>(i - 1, tp, sys, move(next), m);
   }
 }
 
@@ -205,16 +205,16 @@ typename std::enable_if<std::is_same<P<T...>, Pipeline<T...>>::value,
 _spawn_pattern(actor_system &sys, P<T...> &p, caf::optional<Next> next,
                Runtime m) {
   // cout << "[DEBUG] " << "inside PIPELINE spawn" << endl;
-  auto a = for_each_pattern(sys, p.stages_, next, m);
+  auto a = for_each_pattern(sys, p.stages_, move(next), m);
   p.instance_ = Next(a);
-  return p.instance_.value();
+  return Next(a);
 }
 
 template <size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), Next>::type
 for_each_pattern(actor_system &, const std::tuple<Tp...> &,
                  caf::optional<Next> next, const Runtime &) {
-  return next.value();
+  return move(next.value());
 }
 
 template <size_t I = 0, typename... Tp>
@@ -223,8 +223,8 @@ template <size_t I = 0, typename... Tp>
     for_each_pattern(actor_system &sys, const std::tuple<Tp...> &tp,
                      caf::optional<Next> next, const Runtime &m) {
   auto last =
-      _spawn_pattern(sys, std::get<(sizeof...(Tp)) - 1 - I>(tp), next, m);
-  return for_each_pattern<I + 1, Tp...>(sys, tp, last, m);
+      _spawn_pattern(sys, std::get<(sizeof...(Tp)) - 1 - I>(tp), move(next), m);
+  return for_each_pattern<I + 1, Tp...>(sys, tp, move(last), m);
 }
 
 } // namespace caf_pp

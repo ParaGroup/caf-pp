@@ -13,6 +13,26 @@ void Next::send(event_based_actor *a, message &&msg) {
   }
 }
 
+void Next::flush(event_based_actor *a) {
+  if (batch_ != 1) {
+    for (auto &&[n, m] : zip(nexts_, messages_)) {
+      if (!m.empty()) {
+        a->send(n, move(m));
+      }
+    }
+  }
+}
+
+void Next::flush() {
+  if (batch_ != 1) {
+    for (auto &&[n, m] : zip(nexts_, messages_)) {
+      if (!m.empty()) {
+        anon_send(n, move(m));
+      }
+    }
+  }
+}
+
 void Next::send_no_batch(event_based_actor *a, message &&msg) {
   auto ret = policy_(nexts_, msg);
   if (ret) {
