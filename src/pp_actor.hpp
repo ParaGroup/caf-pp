@@ -53,11 +53,11 @@ struct pp_actor : public event_based_actor {
     return caf::optional<const actor &>();
   }
 
-  inline caf::optional<const vector<actor> &> nexts() {
+  inline caf::optional<const vector<Next::ActorVar> &> nexts() {
     if (next_) {
       return next_.value().actors();
     }
-    return caf::optional<const vector<actor> &>();
+    return caf::optional<const vector<Next::ActorVar> &>();
   }
 
 protected:

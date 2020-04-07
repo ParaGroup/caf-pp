@@ -1,4 +1,5 @@
 #pragma once
+#include <variant>
 
 #include <caf/all.hpp>
 #include <range/v3/all.hpp>
@@ -12,22 +13,22 @@ using ranges::view::zip;
 namespace caf_pp {
 
 struct Next {
-  Next(vector<actor> nexts, Policy policy, size_t batch)
+  using ActorVar = std::variant<actor, Next>;
+
+  Next(vector<ActorVar> nexts, Policy policy, size_t batch)
       : nexts_(nexts), policy_(policy), messages_(nexts.size()), batch_(batch) {
     // nop
   }
-  Next(vector<actor> nexts, Policy policy) : Next(nexts, policy, 1) {
+  Next(vector<ActorVar> nexts, Policy policy) : Next(nexts, policy, 1) {
     // nop
   }
-  Next(vector<actor> nexts) : Next(nexts, RoundRobinPolicy()) {
+  Next(vector<ActorVar> nexts) : Next(nexts, RoundRobinPolicy()) {
     // nop
   }
-  Next(actor a) : Next(vector<actor>({a})) {
+  Next(actor a) : Next(vector<ActorVar>({a})) {
     // nop
   }
-  ~Next() {
-    flush();
-  }
+  ~Next() { flush(); }
 
   Next(const Next &other) : Next(other.nexts_, other.policy_, other.batch_) {
     // nop
@@ -46,25 +47,40 @@ struct Next {
   void flush();
 
   inline void send_at(event_based_actor *a, size_t i, message &&msg) {
-    a->send(nexts_.at(i), move(msg));
-  }
-  inline caf::optional<const actor &> get_next(const message &msg) {
-    auto ret = policy_(nexts_, msg);
-    if (ret) {
-      return nexts_[ret.value()];
+    auto next = nexts_.at(i);
+    if (holds_alternative<Next>(next)) {
+      get<Next>(next).send_at(a, i, move(msg));
     } else {
-      return caf::optional<const actor &>();
+      a->send(get<actor>(next), move(msg));
     }
   }
-  inline const vector<actor> &actors() { return nexts_; }
+  caf::optional<const actor &> get_next(const message &msg);
+  inline const vector<ActorVar> &actors() { return nexts_; }
   inline size_t size() { return nexts_.size(); }
   inline Policy &policy() { return policy_; }
 
 private:
   void send_no_batch(event_based_actor *a, message &&msg);
   void send_batch(event_based_actor *a, message &&msg);
-  
-  vector<actor> nexts_;
+
+  inline void send_or_forward(ActorVar &next, event_based_actor *a,
+                              message &&msg) {
+    if (holds_alternative<Next>(next)) {
+      get<Next>(next).send(a, move(msg));
+    } else {
+      a->send(get<actor>(next), move(msg));
+    }
+  }
+
+  inline void send_or_forward(ActorVar &next, message &&msg) {
+    if (holds_alternative<Next>(next)) {
+      get<Next>(next).send(move(msg));
+    } else {
+      anon_send(get<actor>(next), move(msg));
+    }
+  }
+
+  vector<ActorVar> nexts_;
   Policy policy_;
   vector<vector<message>> messages_;
   size_t batch_;

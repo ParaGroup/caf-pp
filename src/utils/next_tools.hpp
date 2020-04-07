@@ -11,8 +11,8 @@ namespace caf_pp {
 namespace utils {
 
 actor next_to_actor(actor_system &sys, Next &&next) {
-  if (next.size() == 1) {
-    return next.actors()[0];
+  if (next.size() == 1 && holds_alternative<actor>(next.actors()[0])) {
+    return get<actor>(next.actors()[0]);
   } else {
     return sys.spawn<pp_impl::Emitter>(next);
   }

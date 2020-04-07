@@ -87,10 +87,10 @@ _spawn_pattern(actor_system &sys, P<T> &p, caf::optional<Next> next,
   auto replicas = p.replicas_ ? p.replicas_.value() : 4;
   auto runtime = p.runtime_ ? p.runtime_.value() : m;
 
-  vector<actor> workers;
+  vector<Next::ActorVar> workers;
   for (auto _ = replicas; _ > 0; _--) {
     auto worker = _spawn_pattern(sys, p.stage_, next, runtime);
-    workers.push_back(next_to_actor(sys, move(worker)));
+    workers.push_back(Next(move(worker)));
   }
   auto n = Next(workers, p.policy_, p.batch_);
   p.instance_ = n;
