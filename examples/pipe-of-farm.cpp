@@ -9,7 +9,7 @@ using namespace caf_pp;
 
 class storage : public pp_actor {
 public:
-  storage(actor_config &cfg, caf::optional<actor> next) : pp_actor(cfg, next) {
+  storage(actor_config &cfg, caf::optional<Next> next) : pp_actor(cfg, next) {
     // nop
   }
 
@@ -45,7 +45,7 @@ private:
 
 class dispatcher : public pp_actor {
 public:
-  dispatcher(actor_config &cfg, caf::optional<actor> next)
+  dispatcher(actor_config &cfg, caf::optional<Next> next)
       : pp_actor(cfg, next) {
     // nop
   }
@@ -108,16 +108,16 @@ void caf_main(actor_system &sys, const config &) {
                              .replicas(3)
                              .runtime(Runtime::actors);
   Pipeline pipe(storage_farm, dispatcher_farm);
-
+  cout << "    Pattern: " << pipe << endl;
   auto first = spawn_pattern(sys, pipe).value();
 
   // subscribe 2 clients
   auto c1 = sys.spawn<client>();
   auto c2 = sys.spawn<client>();
   auto dispatcher_actor = dispatcher_farm.instance_.value();
-  anon_send(dispatcher_actor, "asd", "1", c1);
-  anon_send(dispatcher_actor, "asd", "2", c1);
-  anon_send(dispatcher_actor, "asd", "3", c2);
+  dispatcher_actor.send(make_message("asd", "1", c1));
+  dispatcher_actor.send(make_message("asd", "2", c1));
+  dispatcher_actor.send(make_message("asd", "3", c2));
 
   // send updates
   anon_send(first, "asd", make_tuple(1, 2, 3));

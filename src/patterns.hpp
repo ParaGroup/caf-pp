@@ -7,15 +7,18 @@
 #include <range/v3/all.hpp>
 
 #include "pp_actor.hpp"
+#include "policy2.hpp"
 
 using namespace caf;
 using namespace std;
 
 namespace caf_pp {
 enum Runtime { threads, actors };
-ostream &operator<<(ostream &o, Runtime e);
+ostream &operator<<(ostream &o, Runtime& e);
 
-struct Pattern {};
+struct Pattern {
+  caf::optional<Next> instance_;
+};
 
 using SpawnCb = function<void(actor)>;
 template <typename Actor> struct Seq : public Pattern {
@@ -39,7 +42,6 @@ template <typename Actor> struct Seq : public Pattern {
 
   caf::optional<Runtime> runtime_;
   caf::optional<SpawnCb> spawn_cb_;
-  caf::optional<actor> instance_;
 };
 
 namespace PartitionSched {
@@ -50,6 +52,7 @@ struct dynamic_ {
 } // namespace PartitionSched
 using PartitionVar =
     std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
+ostream &operator<<(ostream &o, PartitionVar& e);
 
 template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container
@@ -75,7 +78,6 @@ template <typename Cnt> struct Map : public Pattern {
   PartitionVar sched_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
-  caf::optional<actor> instance_;
 };
 
 template <class CntIn, class CntOut> struct Map2 : public Pattern {
@@ -102,7 +104,6 @@ template <class CntIn, class CntOut> struct Map2 : public Pattern {
   PartitionVar sched_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
-  caf::optional<actor> instance_;
 };
 
 template <typename Cnt> struct DivConq : public Pattern {
@@ -121,7 +122,6 @@ template <typename Cnt> struct DivConq : public Pattern {
   MergFun merg_fun_;
   SeqFun seq_fun_;
   CondFun cond_fun_;
-  caf::optional<actor> instance_;
 };
 
 template <typename T> struct Farm : public Pattern {
@@ -149,7 +149,6 @@ template <typename T> struct Farm : public Pattern {
   actor_pool::policy policy_;
   caf::optional<uint32_t> replicas_;
   caf::optional<Runtime> runtime_;
-  caf::optional<actor> instance_;
 };
 
 template <class... T> struct FarmRouter : public Pattern {
@@ -173,7 +172,33 @@ template <class... T> struct FarmRouter : public Pattern {
   tuple<T &...> stages_;
   actor_pool::policy policy_;
   caf::optional<Runtime> runtime_;
-  caf::optional<actor> instance_;
+};
+
+template <typename T> struct AllFarm : public Pattern {
+  AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()) {
+    static_assert(is_base_of<Pattern, T>::value,
+                  "Type parameter of this class must derive from Pattern");
+  }
+
+  AllFarm &policy(Policy policy) {
+    policy_ = policy;
+    return *this;
+  };
+
+  AllFarm &replicas(uint32_t replicas) {
+    replicas_ = replicas;
+    return *this;
+  };
+
+  AllFarm &runtime(Runtime runtime) {
+    runtime_ = runtime;
+    return *this;
+  };
+
+  T &stage_;
+  Policy policy_;
+  caf::optional<uint32_t> replicas_;
+  caf::optional<Runtime> runtime_;
 };
 
 template <class... T> struct Pipeline : public Pattern {
@@ -183,7 +208,6 @@ template <class... T> struct Pipeline : public Pattern {
   }
 
   tuple<T &...> stages_;
-  caf::optional<actor> instance_;
 };
 
 } // namespace caf_pp
