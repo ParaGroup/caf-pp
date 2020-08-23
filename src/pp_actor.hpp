@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <typeinfo>
 
 #include <caf/all.hpp>
 
@@ -27,6 +28,10 @@ struct pp_actor : public event_based_actor {
       next_.value().send(this, move(msg));
     }
   }
+
+#ifdef SIZED_QUEUE
+  bool send_next_if(size_t size, message &msg);
+#endif
 
   template <typename... Args> inline void send_at(size_t i, Args &&... args) {
     if (next_) {
@@ -57,5 +62,4 @@ struct pp_actor : public event_based_actor {
 protected:
   caf::optional<Next> next_;
 };
-
 } // namespace caf_pp

@@ -181,7 +181,7 @@ template <typename T> struct AllFarm : public Pattern {
   }
 
   AllFarm &policy(Policy policy) {
-    policy_ = policy;
+    policy_ = move(policy);
     return *this;
   };
 

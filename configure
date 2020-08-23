@@ -18,6 +18,7 @@ Usage: $0 [OPTION]...
 
 # default values
 RELEASE=no
+SIZED_QUEUE=OFF
 
 for i in "$@"
 do
@@ -28,6 +29,10 @@ case $i in
     ;;
     --release)
       RELEASE=yes
+      shift # past argument=value
+    ;;
+    --sized-queue)
+      SIZED_QUEUE=ON
       shift # past argument=value
     ;;
     --cxx-path=*)
@@ -50,7 +55,8 @@ case $i in
 esac
 done
 
-CMAKE_ARGS=""
+CMAKE_ARGS="-DSIZED_QUEUE=$SIZED_QUEUE"
+
 if [ $RELEASE = "yes" ] ; then
   CMAKE_ARGS="$CMAKE_ARGS -D CMAKE_BUILD_TYPE=Release"
 else

@@ -3,7 +3,7 @@
 namespace caf_pp {
 
 void Next::send(event_based_actor *a, message &&msg) {
-  auto ret = policy_(nexts_, msg);
+  auto ret = policy_->select(nexts_, msg);
   if (ret) {
     a->send(ret.value(), move(msg));
   } else {
@@ -14,7 +14,7 @@ void Next::send(event_based_actor *a, message &&msg) {
 }
 
 void Next::send(message &&msg) {
-  auto ret = policy_(nexts_, msg);
+  auto ret = policy_->select(nexts_, msg);
   if (ret) {
     anon_send(ret.value(), move(msg));
   } else {

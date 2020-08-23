@@ -10,7 +10,7 @@ using namespace caf;
 namespace caf_pp {
 
 struct Next {
-  Next(vector<actor> nexts, Policy policy) : nexts_(nexts), policy_(policy) {
+  Next(vector<actor> nexts, Policy policy) : nexts_(move(nexts)), policy_(move(policy)) {
     // nop
   }
   Next(vector<actor> nexts) : Next(nexts, RoundRobinPolicy()) {
@@ -35,7 +35,7 @@ struct Next {
     a->send(nexts_.at(i), move(msg));
   }
   inline caf::optional<const actor &> get_next(const message &msg) {
-    return policy_(nexts_, msg);
+    return policy_->select(nexts_, msg);
   }
   inline const vector<actor> &actors() { return nexts_; }
   inline size_t size() { return nexts_.size(); }

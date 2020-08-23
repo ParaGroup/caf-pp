@@ -44,6 +44,10 @@ else()
   install(TARGETS range EXPORT my_export_set DESTINATION include)
 endif()
 
+if(${SIZED_QUEUE})
+  add_compile_definitions(SIZED_QUEUE)
+endif()
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
@@ -51,7 +55,8 @@ include(CPack)
 
 # Library
 add_library(caf_pp src/patterns.cpp
-                   src/next.cpp)
+                   src/next.cpp
+                   src/pp_actor.cpp)
 target_include_directories(caf_pp PUBLIC ./src ${CAF_INCLUDE} ${RANGE_INCLUDE})
 target_link_libraries(caf_pp ${CAF_LIB} pthread)
 
@@ -79,6 +84,12 @@ target_link_libraries(routerfarm caf_pp ${CAF_LIB})
 add_executable (pipe-of-farm2 examples/pipe-of-farm2.cpp)
 target_include_directories(pipe-of-farm2 PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
 target_link_libraries(pipe-of-farm2 caf_pp ${CAF_LIB})
+
+if(${SIZED_QUEUE})
+  add_executable (max-rate-pipe examples/max-rate-pipe.cpp)
+  target_include_directories(max-rate-pipe PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+  target_link_libraries(max-rate-pipe caf_pp ${CAF_LIB})
+endif()
 
 # Install Library
 install(TARGETS caf_pp DESTINATION lib)
