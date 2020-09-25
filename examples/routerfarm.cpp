@@ -3,7 +3,8 @@
 
 #include "all.hpp"
 
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace caf;
 using namespace caf_pp;
 
@@ -16,7 +17,7 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](msg) { aout(this) << "this is Act1" << endl; }};
+    return {[=,this](msg) { aout(this) << "this is Act1" << endl; }};
   }
 };
 
@@ -27,7 +28,7 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](msg) { aout(this) << "this is Act2" << endl; }};
+    return {[=,this](msg) { aout(this) << "this is Act2" << endl; }};
   }
 };
 

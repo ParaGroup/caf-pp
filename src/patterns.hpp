@@ -6,29 +6,28 @@
 #include <caf/all.hpp>
 #include <range/v3/all.hpp>
 
-#include "pp_actor.hpp"
 #include "policy2.hpp"
+#include "pp_actor.hpp"
 
 using namespace caf;
-using namespace std;
 
 namespace caf_pp {
 enum Runtime { threads, actors };
-ostream &operator<<(ostream &o, Runtime& e);
+std::ostream &operator<<(std::ostream &o, Runtime &e);
 
 struct Pattern {
   caf::optional<Next> instance_;
 };
 
-using SpawnCb = function<void(actor)>;
+using SpawnCb = std::function<void(actor)>;
 template <typename Actor> struct Seq : public Pattern {
 
   Seq() {}
   Seq(SpawnCb spawn_cb) : spawn_cb_(spawn_cb) {
-    static_assert(is_base_of<pp_actor, Actor>::value,
+    static_assert(std::is_base_of<pp_actor, Actor>::value,
                   "Actor parameter of Seq must derive from 'pp_actor'");
   }
-  // TODO: add constructor that forward parameters
+  // TODO: add constructor that std::forward parameters
   // read:
   // https://stackoverflow.com/questions/57563594/partial-class-template-argument-deduction-in-c17
   // https://stackoverflow.com/questions/41833630/c17-class-template-partial-deduction
@@ -52,13 +51,13 @@ struct dynamic_ {
 } // namespace PartitionSched
 using PartitionVar =
     std::variant<PartitionSched::static_, PartitionSched::dynamic_>;
-ostream &operator<<(ostream &o, PartitionVar& e);
+std::ostream &operator<<(std::ostream &o, PartitionVar &e);
 
 template <typename Cnt> struct Map : public Pattern {
   // TODO: check that Cont is a container
   using Itr = typename Cnt::iterator;
   using Rng = ranges::subrange<Itr>;
-  using Fnc = function<void(Rng)>;
+  using Fnc = std::function<void(Rng)>;
   Map(Fnc map_fun) : map_fun_(map_fun), sched_(PartitionSched::static_()) {}
 
   Map<Cnt> &scheduler(PartitionVar sched) {
@@ -84,7 +83,7 @@ template <class CntIn, class CntOut> struct Map2 : public Pattern {
   // TODO: check that Cont is a container
   using In = typename CntIn::value_type;
   using Out = typename CntOut::value_type;
-  using Fnc = function<Out(const In &)>;
+  using Fnc = std::function<Out(const In &)>;
   Map2(Fnc map_fun) : map_fun_(map_fun), sched_(PartitionSched::static_()) {}
 
   Map2<CntIn, CntOut> &scheduler(PartitionVar sched) {
@@ -110,10 +109,10 @@ template <typename Cnt> struct DivConq : public Pattern {
   // TODO: check that Cont is a container
   using Itr = typename Cnt::iterator;
   using Rng = ranges::subrange<Itr>;
-  using DivFun = function<vector<Rng>(Rng &)>;
-  using MergFun = function<Rng(vector<Rng> &)>;
-  using SeqFun = function<Rng(Rng &)>;
-  using CondFun = function<bool(Rng &)>;
+  using DivFun = std::function<std::vector<Rng>(Rng &)>;
+  using MergFun = std::function<Rng(std::vector<Rng> &)>;
+  using SeqFun = std::function<Rng(Rng &)>;
+  using CondFun = std::function<bool(Rng &)>;
   DivConq(DivFun div_fun, MergFun merg_fun, SeqFun seq_fun, CondFun cond_fun)
       : div_fun_(div_fun), merg_fun_(merg_fun), seq_fun_(seq_fun),
         cond_fun_(cond_fun) {}
@@ -126,7 +125,7 @@ template <typename Cnt> struct DivConq : public Pattern {
 
 template <typename T> struct Farm : public Pattern {
   Farm(T &stage) : stage_(stage), policy_(actor_pool::round_robin()) {
-    static_assert(is_base_of<Pattern, T>::value,
+    static_assert(std::is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
 
@@ -154,7 +153,7 @@ template <typename T> struct Farm : public Pattern {
 template <class... T> struct FarmRouter : public Pattern {
   FarmRouter(T &... stages)
       : stages_(stages...), policy_(actor_pool::round_robin()) {
-    static_assert(conjunction_v<is_base_of<Pattern, T>...>,
+    static_assert(std::conjunction_v<std::is_base_of<Pattern, T>...>,
                   "Type parameter of this class must derive from Pattern");
   }
 
@@ -168,20 +167,20 @@ template <class... T> struct FarmRouter : public Pattern {
     return *this;
   };
 
-  // vector<Pattern> stage_;
-  tuple<T &...> stages_;
+  // std::vector<Pattern> stage_;
+  std::tuple<T &...> stages_;
   actor_pool::policy policy_;
   caf::optional<Runtime> runtime_;
 };
 
 template <typename T> struct AllFarm : public Pattern {
   AllFarm(T &stage) : stage_(stage), policy_(RoundRobinPolicy()) {
-    static_assert(is_base_of<Pattern, T>::value,
+    static_assert(std::is_base_of<Pattern, T>::value,
                   "Type parameter of this class must derive from Pattern");
   }
 
   AllFarm &policy(Policy policy) {
-    policy_ = move(policy);
+    policy_ = std::move(policy);
     return *this;
   };
 
@@ -203,11 +202,11 @@ template <typename T> struct AllFarm : public Pattern {
 
 template <class... T> struct Pipeline : public Pattern {
   Pipeline(T &... stages) : stages_(stages...) {
-    static_assert(conjunction_v<is_base_of<Pattern, T>...>,
+    static_assert(std::conjunction_v<std::is_base_of<Pattern, T>...>,
                   "Type parameter of this class must derive from Pattern");
   }
 
-  tuple<T &...> stages_;
+  std::tuple<T &...> stages_;
 };
 
 } // namespace caf_pp

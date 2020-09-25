@@ -11,18 +11,18 @@ bool pp_actor::send_next_if(size_t size, message &msg) {
         actor a = next.get_next(msg).value();
         auto qsize = receiver_queue_size(a);
         if (qsize < size) {
-          send(a, move(msg));
+          send(a, std::move(msg));
           return true;
         }
       }
     } else if (next.policy()->type() == typeid(BroadcastPolicy)) {
-      next.send(this, move(msg));
+      next.send(this, std::move(msg));
       return true;
     } else {
       actor a = next.get_next(msg).value();
       auto qsize = receiver_queue_size(a);
       if (qsize < size) {
-        send(a, move(msg));
+        send(a, std::move(msg));
         return true;
       }
     }

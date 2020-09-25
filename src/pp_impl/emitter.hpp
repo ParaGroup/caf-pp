@@ -15,7 +15,7 @@ struct Emitter : public pp_actor {
 
   behavior make_behavior() override {
     set_default_handler(
-        [=](scheduled_actor *, message_view &msg) -> result<message> {
+        [=,this](scheduled_actor *, message_view &msg) -> result<message> {
           // aout(this) << "default handler " << msg.content().stringify() <<
           // endl;
           this->send_next(msg.move_content_to_message());

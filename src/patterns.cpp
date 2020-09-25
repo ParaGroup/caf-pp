@@ -2,7 +2,7 @@
 
 namespace caf_pp {
 
-ostream &operator<<(ostream &o, Runtime& e) {
+std::ostream &operator<<(std::ostream &o, Runtime& e) {
   switch (e) {
   case Runtime::threads:
     return o << "threads";
@@ -13,7 +13,7 @@ ostream &operator<<(ostream &o, Runtime& e) {
   }
 }
 
-ostream &operator<<(ostream &o, PartitionVar &e) {
+std::ostream &operator<<(std::ostream &o, PartitionVar &e) {
   if (holds_alternative<PartitionSched::static_>(e)) {
     return o << "static_sched";
   } else {

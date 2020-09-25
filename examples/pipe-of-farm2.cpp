@@ -3,7 +3,8 @@
 
 #include "all.hpp"
 
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace caf;
 using namespace caf_pp;
 
@@ -14,8 +15,8 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](string &a, int b) {
-      string res;
+    return {[=,this](std::string &a, int b) {
+      std::string res;
       for (int i = b; i > 0; i--) {
         res += a;
       }
@@ -31,7 +32,7 @@ public:
   }
 
   behavior make_behavior() override {
-    return {[=](string &a) {
+    return {[=,this](std::string &a) {
       aout(this) << "[" << current_sender()->id() << "->" << id() << "] " << a
                  << endl;
     }};
@@ -46,8 +47,8 @@ void caf_main(actor_system &sys) {
   Seq<Act2> seq2;
   auto farm2 =
       AllFarm(seq2)
-          .policy(ByKeyPolicy<string>([](const message &msg) -> const string & {
-            return msg.get_as<string>(0);
+          .policy(ByKeyPolicy<std::string>([](const message &msg) -> const std::string & {
+            return msg.get_as<std::string>(0);
           }))
           .replicas(3)
           .runtime(Runtime::actors);

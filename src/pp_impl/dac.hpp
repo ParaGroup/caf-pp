@@ -8,7 +8,6 @@
 #include "../next.hpp"
 
 using namespace caf;
-using namespace std;
 
 namespace caf_pp {
 namespace pp_impl {
@@ -22,7 +21,7 @@ template <typename Cnt> struct dac_state {
   using Itr = typename Cnt::iterator;
   using Rng = ranges::subrange<Itr>;
   int num_fragments;
-  vector<Rng> partial_res;
+  std::vector<Rng> partial_res;
 };
 template <typename Cnt>
 behavior dac_worker_fun(stateful_actor<dac_state<Cnt>> *self, uint32_t id_,
@@ -36,13 +35,13 @@ behavior dac_worker_fun(stateful_actor<dac_state<Cnt>> *self, uint32_t id_,
     return *ns_c | ranges::views::slice(start, end);
   };
   auto create_index = [=](ns_type<Cnt> &ns_c,
-                          Rng range) -> tuple<size_t, size_t> {
+                          Rng range) -> std::tuple<size_t, size_t> {
     size_t start = range.begin() - ns_c->begin();
     size_t end = range.end() - ns_c->begin();
     return {start, end};
   };
   auto send_parent_and_terminate = [=](ns_type<Cnt> &ns_c, Rng &res) {
-    tuple<size_t, size_t> t = create_index(ns_c, res);
+    std::tuple<size_t, size_t> t = create_index(ns_c, res);
     self->send(parent_, up::value, id_, ns_c, size_t(get<0>(t)),
                size_t(get<1>(t)));
     self->quit();
@@ -73,7 +72,7 @@ behavior dac_worker_fun(stateful_actor<dac_state<Cnt>> *self, uint32_t id_,
             auto &s = self->state;
             s.num_fragments -= 1;
             auto res = create_range(ns_c, start, end);
-            s.partial_res[id] = move(res);
+            s.partial_res[id] = std::move(res);
             if (s.num_fragments == 0) {
               Rng res = p_.merg_fun_(s.partial_res);
               send_parent_and_terminate(ns_c, res);
@@ -89,7 +88,7 @@ behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
                         caf::optional<Next> out_) {
   return {[=](Cnt &c) mutable {
             // divide
-            ns_type<Cnt> ns_c(move(c));
+            ns_type<Cnt> ns_c(std::move(c));
 
             auto a = self->spawn(dac_worker_fun<Cnt>, 0, p_,
                                  actor_cast<actor>(self));
@@ -101,10 +100,10 @@ behavior dac_master_fun(stateful_actor<dac_master_state> *self, DivConq<Cnt> p_,
           [=](up, uint32_t, ns_type<Cnt> ns_c, size_t, size_t) mutable {
             Cnt c = ns_c.release();
             if (out_) {
-              out_.value().send(self, make_message(move(c)));
+              out_.value().send(self, make_message(std::move(c)));
               self->state.promis.deliver(0);
             } else {
-              self->state.promis.deliver(move(c));
+              self->state.promis.deliver(std::move(c));
             }
           }};
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(caf-pp VERSION 0.1.0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 
 # add stdlib to clang++
 # TODO: check that the libc++ is installed
@@ -20,7 +20,7 @@ find_library(PTHREAD pthread)
 
 # Find/Download Range-v3
 # reference: https://foonathan.net/2016/07/cmake-dependency-handling/
-find_path(RANGE_INCLUDE range/v3/all.hpp)
+find_path(RANGE_INCLUDE range/v3/all.hpp ${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3/include)
 if(RANGE_INCLUDE)
   add_library(range INTERFACE)
   target_include_directories(range INTERFACE ${RANGE_INCLUDE})
@@ -57,37 +57,37 @@ include(CPack)
 add_library(caf_pp src/patterns.cpp
                    src/next.cpp
                    src/pp_actor.cpp)
-target_include_directories(caf_pp PUBLIC ./src ${CAF_INCLUDE} ${RANGE_INCLUDE})
+target_include_directories(caf_pp PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(caf_pp ${CAF_LIB} pthread)
 
 # Targets
 add_executable (pipe-of-farm examples/pipe-of-farm.cpp)
-target_include_directories(pipe-of-farm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(pipe-of-farm PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(pipe-of-farm caf_pp ${CAF_LIB})
 
 add_executable (pipe-of-map examples/pipe-of-map.cpp)
-target_include_directories(pipe-of-map PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(pipe-of-map PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(pipe-of-map caf_pp ${CAF_LIB})
 
 add_executable (quicksort examples/quicksort.cpp)
-target_include_directories(quicksort PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(quicksort PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(quicksort caf_pp ${CAF_LIB})
 
 add_executable (recMM examples/recMM.cpp)
-target_include_directories(recMM PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(recMM PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(recMM caf_pp ${CAF_LIB})
 
 add_executable (routerfarm examples/routerfarm.cpp)
-target_include_directories(routerfarm PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(routerfarm PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(routerfarm caf_pp ${CAF_LIB})
 
 add_executable (pipe-of-farm2 examples/pipe-of-farm2.cpp)
-target_include_directories(pipe-of-farm2 PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+target_include_directories(pipe-of-farm2 PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
 target_link_libraries(pipe-of-farm2 caf_pp ${CAF_LIB})
 
 if(${SIZED_QUEUE})
   add_executable (max-rate-pipe examples/max-rate-pipe.cpp)
-  target_include_directories(max-rate-pipe PUBLIC ${CAF_INCLUDE} ${RANGE_INCLUDE} ./src)
+  target_include_directories(max-rate-pipe PUBLIC ./src ${RANGE_INCLUDE} ${CAF_INCLUDE})
   target_link_libraries(max-rate-pipe caf_pp ${CAF_LIB})
 endif()
 

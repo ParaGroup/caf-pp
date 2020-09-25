@@ -7,18 +7,18 @@ namespace utils {
 
 template <class T> struct ns_type {
   ns_type(T &&obj) {
-    ptr = new T(move(obj));
+    ptr = new T(std::move(obj));
     // if (__verbose__)
     //   cout << "  [DEBUG] constructor" << endl;
   };
   ns_type(const ns_type &other)
       : ptr{other.ptr} {
             // if (__verbose__)
-            //   cout << "  [DEBUG] copy constructor" << endl;
+            //   std::cout << "  [DEBUG] copy constructor" << std::endl;
         };
   ns_type(ns_type &&other) : ptr{other.ptr} {
     // if (__verbose__)
-    //   cout << "  [DEBUG] move constructor" << endl;
+    //   std::cout << "  [DEBUG] std::move constructor" < std::endl;
   }
   ns_type &operator=(const ns_type &other) = delete;
 
@@ -27,7 +27,7 @@ template <class T> struct ns_type {
 
   T release() {
     // must be called to avoid memory leak
-    T res(move(*ptr));
+    T res(std::move(*ptr));
     delete ptr;
     return res;
   }
@@ -39,7 +39,7 @@ private:
 template <class Inspector, class T>
 typename Inspector::result_type inspect(Inspector &f, ns_type<T> &x) {
   //   if (__verbose__)
-  //     cout << "  [DEBUG] ns_type inspector" << endl;
+  //     std::cout << "  [DEBUG] ns_type inspector" << std::endl;
   return f(caf::meta::type_name("ns_type"), *x);
 }
 } // namespace utils

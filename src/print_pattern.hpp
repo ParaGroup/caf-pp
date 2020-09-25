@@ -4,8 +4,8 @@
 
 #include "patterns.hpp"
 
+using std::ostream;
 using namespace caf;
-using namespace std;
 
 namespace caf_pp {
 

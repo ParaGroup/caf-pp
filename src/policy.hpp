@@ -3,7 +3,6 @@
 #include <caf/all.hpp>
 
 using namespace caf;
-using namespace std;
 
 namespace caf_pp {
 
@@ -20,13 +19,13 @@ template <class Key, class GetKey, class Router> struct by_key_policy {
     size_t hashcode = hf_(key);
     size_t idx = rf_(hashcode, vec.size());
     CAF_ASSERT(idx > 0 && idx < vec.size());
-    // cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << endl;
+    // std::cout << "[DEBUG] hashcode=" << hashcode << " select=" << idx << std::endl;
     actor selected = vec[idx];
     guard.unlock();
     selected->enqueue(std::move(ptr), host);
   }
   GetKey gf_;
-  hash<Key> hf_;
+  std::hash<Key> hf_;
   Router rf_;
 };
 

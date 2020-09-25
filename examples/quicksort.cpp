@@ -3,16 +3,17 @@
 
 #include "all.hpp"
 
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace caf;
 using namespace caf_pp;
 using namespace ranges;
 
-template <class T> string con_to_string(const T &c) {
-  string res{""};
+template <class T> std::string con_to_string(const T &c) {
+  std::string res{""};
   size_t i{0};
   for (auto el : c) {
-    res += to_string(el) + (i < c.size() - 1 ? " " : "");
+    res += std::to_string(el) + (i < c.size() - 1 ? " " : "");
     i++;
   }
   return res;
@@ -26,10 +27,10 @@ void caf_main(actor_system &sys, const config &) {
   cout << "CAF_VERSION=" << CAF_VERSION << endl;
   scoped_actor self{sys};
 
-  using Cnt = vector<int64_t>;
+  using Cnt = std::vector<int64_t>;
   using Itr = typename Cnt::iterator;
   using Rng = subrange<Itr>;
-  auto div = [](Rng &op) -> vector<Rng> {
+  auto div = [](Rng &op) -> std::vector<Rng> {
     // divide the input
     size_t last = op.size() - 1;
     auto pivot = op[last];
@@ -51,7 +52,7 @@ void caf_main(actor_system &sys, const config &) {
     return {op | views::slice(size_t{0}, i + 1),
             op | views::slice(i + 2, ranges::end)};
   };
-  auto merge = [](vector<Rng> &v_res) -> Rng {
+  auto merge = [](std::vector<Rng> &v_res) -> Rng {
     // merge the output
     return {v_res[0].begin(), v_res[1].end()};
   };
@@ -70,11 +71,11 @@ void caf_main(actor_system &sys, const config &) {
   cout << "    Pattern: " << dac << endl;
   auto handle = spawn_pattern(sys, dac).value();
 
-  vector<int64_t> vec{3, 4, 1, 7, 8, 5, 2};
+  std::vector<int64_t> vec{3, 4, 1, 7, 8, 5, 2};
   aout(self) << "main_ (" << con_to_string(vec) << ")" << endl;
   self->request(handle, caf::infinite, std::move(vec))
       .receive(
-          [&](vector<int64_t> &vec) {
+          [&](std::vector<int64_t> &vec) {
             aout(self) << "main_ (" << con_to_string(vec) << ")" << endl;
           },
           [&self](error &_) { aout(self) << "error_" << _ << endl; });

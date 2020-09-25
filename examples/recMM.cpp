@@ -6,12 +6,13 @@
 
 #include <caf/all.hpp>
 
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace caf;
 
 template <class T> struct matrix2d {
   matrix2d(size_t y, size_t x)
-      : v_(y) { // initalize all elements in the vector with T()
+      : v_(y) { // initalize all elements in the std::vector with T()
     for (auto &v_line : v_) {
       v_line = std::vector<T>(x);
     }
@@ -185,7 +186,7 @@ behavior worker_fun(event_based_actor *self, actor master, int /*id*/) {
 
 struct master_state {
   int num_workers;
-  vector<actor> workers;
+  std::vector<actor> workers;
   int num_workers_terminated;
   int num_work_sent;
   int num_work_completed;
@@ -201,7 +202,7 @@ behavior master_fun(stateful_actor<master_state> *self) {
   auto send_work = [=](work_msg &&work_message) {
     auto &s = self->state;
     int work_index = (work_message.sr_c + work_message.sc_c) % s.num_workers;
-    self->send(s.workers[work_index], move(work_message));
+    self->send(s.workers[work_index], std::move(work_message));
     ++s.num_work_sent;
   };
   // onPostStart()
@@ -214,7 +215,7 @@ behavior master_fun(stateful_actor<master_state> *self) {
     int num_blocks = config::data_length * config::data_length;
     send_work(work_msg{0, 0, 0, 0, 0, 0, 0, num_blocks, data_length});
   }
-  return {[=](work_msg &work_message) { send_work(move(work_message)); },
+  return {[=](work_msg &work_message) { send_work(std::move(work_message)); },
           [=](done_msg_atom) {
             auto &s = self->state;
             ++s.num_work_completed;
@@ -241,7 +242,7 @@ void caf_main(actor_system &sys, const config &cfg) {
   sys.await_all_actors_done();
 
   bool is_valid = cfg.valid();
-  cout << boolalpha << "Result valid: " << is_valid << endl;
+  cout << std::boolalpha << "Result valid: " << is_valid << endl;
 }
 
 CAF_MAIN()

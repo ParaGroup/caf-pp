@@ -4,7 +4,8 @@
 
 #include "all.hpp"
 
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace std::chrono_literals;
 using namespace std::chrono;
 using namespace caf;
