@@ -32,3 +32,25 @@ To compile with the release optimizations pass the `--release` parameter to the 
 ## License
 
 MIT License
+
+## How to Cite
+If our work is useful for your research, please cite the following paper:
+```
+@article{DBLP:journals/ijpp/RinaldiTSMD20,
+  author    = {Luca Rinaldi and Massimo Torquati and Daniele De Sensi and Gabriele Mencagli and Marco Danelutto},
+  title     = {Improving the Performance of Actors on Multi-cores with Parallel Patterns},
+  journal   = {Int. J. Parallel Program.},
+  volume    = {48},
+  number    = {4},
+  pages     = {692--712},
+  year      = {2020},
+  url       = {https://doi.org/10.1007/s10766-020-00663-1},
+  doi       = {10.1007/s10766-020-00663-1},
+  timestamp = {Tue, 29 Dec 2020 00:00:00 +0100},
+  biburl    = {https://dblp.org/rec/journals/ijpp/RinaldiTSMD20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+```
+## Contributors
+This work has been developed by [Massimo Torquati](mailto:massimo.torquati@unipi.it) and Luca Rinaldi.
+
